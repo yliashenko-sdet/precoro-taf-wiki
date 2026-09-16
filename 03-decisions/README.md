@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # Architecture Decision Records
 
 Одне рішення на файл. Статуси: `proposed` → `accepted` → `superseded by ADR-XXX` або `rejected`. Рішення зі статусом accepted не редагується, а замінюється новим.

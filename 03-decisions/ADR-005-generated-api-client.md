@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # ADR-005: API-клієнт генерується зі Swagger
 Статус: Draft (proposed)
 Дата: 2026-09-16

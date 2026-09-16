@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # Glossary
 
 | Термін | Значення |

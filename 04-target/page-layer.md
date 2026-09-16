@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # Page-шар
 
 ADR-004. Фаза 3, після API-preparation.

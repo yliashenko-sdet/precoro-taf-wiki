@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # Аудит jenkins-failed-builds
 
 Джерело: експорт каналу `jenkins-failed-builds` (`jenkins-failed-builds-export.txt`), лише повідомлення каналу без тредів, період експорту уточнюється. 
