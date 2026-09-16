@@ -13,6 +13,14 @@
 - Аудит `release` (2026-09-15), baseline у `05-roadmap/metrics.md`.
 - Вікі створено, ADR-001..006 у статусі Draft.
 
+## Already on the team branch (`fix/11-09-2026`, перевірено 2026-09-16)
+
+- `metrics-reporter.ts` (AUTO-8680): executed, flaky, machine-time загалом і по проектах з результатів Playwright у `metrics/latest.json`, `summary.md`, `history.jsonl`. Це джерело дашборда. Закриває більшу частину T0-04, основа для T0-14.
+- Qase-репортер підключений у конфігу з `QASE_MODE` (T0-10 фактично закрита).
+- Валідація env на старті з зрозумілими помилками (відсутній `.env.dev`, пароль, `QASE_MODE`).
+- 39 проектів, 70 spec-файлів (на `release` 36 і 50): файли вже діляться.
+- Аудитні цифри по файлах і проектах стосуються `release`; для гілки їх треба перезняти при старті фази 0.
+
 ## In Progress
 
 Нічого.

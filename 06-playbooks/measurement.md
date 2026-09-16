@@ -38,8 +38,7 @@
 
 ### Емітер
 
-- `reporter: [['json', { outputFile: 'results.json' }], ...]` у всіх прогонах.
-- `scripts/run-metrics.ts results.json` → рядок у `metrics/runs.jsonl`: `{date, build, branch, agent, env, language, executed, failed, flaky, skipped, wallClock, machineTime, perProject: {name: {executed, machineTime, flaky}}, perFile, perTag, top50: [{title, file, project, duration}], prepShare}`.
+На робочій гілці вже є `src/ui/web/tests/reporters/metrics-reporter.ts` (AUTO-8680): пише `metrics/latest.json`, `summary.md`, `history.jsonl` з executed, flaky, machine-time загалом і по проектах. Не дублювати, а розширити. Цільовий рядок у `history.jsonl`: `{date, build, branch, agent, env, language, executed, failed, flaky, skipped, wallClock, machineTime, perProject: {name: {executed, machineTime, flaky}}, perFile, perTag, top50: [{title, file, project, duration}], prepShare}`.
 - `prepShare`: частка тривалості кроків, чиї назви матчать `create|prepar|setup|login|precondition`, до загальної. До міграції на `test.step` рахується з allure-results.
 
 ### Правила порівняння
