@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # Codemod і контрольний лічильник
 
 ## Що таке codemod

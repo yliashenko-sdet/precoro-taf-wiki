@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # Модулі в Asana і теги в TAF
 
 Джерело: поле модуля в задачах Asana, 112 значень (список нижче, отримано 2026-09-17). Джоба Jenkins запускає smoke + модуль за значенням цього поля або повний прогін на "All modules". Реалізовано лише для PO: теги `@po_purchase_order`, `@so_service_order`, `@bpo_blanket_purchase_order` у 20 файлах із 71.

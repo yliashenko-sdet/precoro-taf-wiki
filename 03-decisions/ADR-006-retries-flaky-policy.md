@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # ADR-006: Політика ретраїв і flaky
 Статус: Draft (proposed)
 Дата: 2026-09-16

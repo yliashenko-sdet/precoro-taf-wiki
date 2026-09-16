@@ -1,3 +1,6 @@
+---
+_organized: true
+---
 # Definition of Done
 
 ## Для тесту
