@@ -48,6 +48,50 @@
 - Поряд з абсолютним machine-time завжди machine-time на тест, бо сьют росте.
 - Ефект конкретної задачі доводиться точково: у PR записано очікування ("no\_dcf\_company s/test 130 → ≤ 45"), після мержу дашборд підтверджує по `perProject`.
 
+## Труба 3. Навантаження на тест (T0-15)
+
+Навіщо: тривалість залежить від того, наскільки завантажений Precorino, тому вона поганий доказ для розмови про потужності і для приймання API-preparation. Кількість запитів не залежить від навантаження середовища і показує, скільки TAF коштує серверу.
+
+### Де чіпляти
+Два джерела, обидва обов'язкові. Якщо рахувати лише браузерні запити, переїзд preparation на API покаже фальшивий виграш: навантаження просто переїде в axios.
+
+**1. Браузер.** Слухач на контексті, поруч із наявними `addInitScript` і трейсом у фікстурі `page` (`base_fixtures.ts:169`). Слухач синхронний і на подіях, які Playwright і так отримує, тому overhead нульовий.
+
+```ts
+// helpers/track-load.ts
+export type LoadCounters = { browser: number; api: number; byType: Record<string, number> };
+
+export function trackContext(context: BrowserContext, c: LoadCounters, appOrigin: string): void {
+  context.on('request', (req) => {
+    if (!req.url().startsWith(appOrigin)) return;   // відкинути CDN, аналітику, зовнішні
+    c.browser++;
+    const t = req.resourceType();
+    c.byType[t] = (c.byType[t] ?? 0) + 1;
+  });
+}
+```
+Викликати скрізь, де створюється контекст: фікстура `page`, майбутній `asUser`, мультиюзерні тести.
+
+**2. API-клієнт.** Один рядок у `withApiStep` (`src/api/requests.ts:71`), там, де вже логуються запит і відповідь: `counters.api++`.
+
+### Як донести до репортера
+Воркер і репортер це різні процеси, тому лічильники передаються через `testInfo`. Анотація дешевша за атач (не пише файл):
+
+```ts
+// у тій самій фікстурі, після use()
+testInfo.annotations.push({ type: 'load', description: JSON.stringify(counters) });
+```
+У `metrics-reporter.ts` в `onTestEnd` розпарсити анотацію і додати в `ProjectBucket` поля `browserRequests`, `apiRequests`, як уже робиться з `attemptsMs`. Далі в `latest.json`, `summary.md` і `history.jsonl`.
+
+### Чого не робити одразу
+Байти. `request.sizes()` це асинхронний виклик по CDP на кожен запит, на тисячах запитів це відчутно. `content-length` із заголовків відповіді безкоштовний, але є не завжди. Кількості запитів достатньо для розмови про потужності; байти додати пізніше і лише якщо знадобляться.
+
+### Як користуватись
+- Цифра нічного прогону: "сьют коштує N запитів до Precorino".
+- Пілот API-preparation на одному проекті: та сама цифра до і після, це доказ ефекту, не залежний від завантаженості середовища.
+- Приймання задач API-preparation: `requests/test` по проекту в критерії готовності поряд із `s/test`.
+- Вхід у розмову про капасіті: розрахунок замість відчуття (питання #15).
+
 ## Тижневий звіт
 
 `scripts/weekly-report.ts` щопонеділка (cron у Jenkins) → `metrics/weekly/YYYY-Www.md`:
