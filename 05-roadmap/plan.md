@@ -12,6 +12,7 @@
 | T0-02 | Зелений `eslint` без ослаблення правил | 0 помилок; крок у Jenkins | eslint 109 → 0 | 1–2 | todo |  |
 | T0-03 | Секрети з репозиторію | MailPit, ControlClient, прод-токен в env; ротовані; git-історія перевірена | secrets 3 → 0 | 1 + інфра | blocked |  |
 | T0-04 | Розширити `metrics-reporter` (є на гілці): top-50 за тривалістю, мова прогону, perFile, perTag | Поля є в `latest.json`; дашборд їх показує |  | 1, інфра-AQA | wip на гілці |  |
+| T0-15 | Лічильник запитів і трафіку на тест у `metrics-reporter` | Поля `requests`, `bytes` на тест і на проект у `latest.json`; цифра нічного прогону в `metrics.md` | навантаження на тест | 1 | todo |  |
 | T0-05 | Частка preparation зі степів Allure | Скрипт по allure-results; цифра в `metrics.md` |  | 1 | todo |  |
 | T0-06 | `--last-failed` у Jenkins-джобі | Параметр "rerun failed only"; `test-results` зберігається між білдами |  | 0.5, інфра-AQA | todo | 006 |
 | T0-07 | Явна мова прогону | `LANGUAGE=auto` видалено; матриця в CI; мова в назві білда |  | 0.5 | todo |  |
