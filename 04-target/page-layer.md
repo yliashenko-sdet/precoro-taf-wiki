@@ -26,5 +26,5 @@ class PoPage extends DocumentPage {
 3. Форковані пари зливаються через компоненти.
 4. Legacy mixin-и видаляються при нулі call-site.
 
-## Храповики
+## Контрольні лічильники
 `this.xxxLocators.` (1 814), `xpath=` (1 047), `expect(` у pages (700), `force`/`clickUsingJavascript` (~420), `.first()` (717).

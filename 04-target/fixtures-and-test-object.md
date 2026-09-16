@@ -17,7 +17,7 @@
 - `logout_url` у тестах заборонено, бо PHPSESSID серверний і logout вбиває сесію всього проекту. Тести на logout ізолюються в окремий контекст.
 
 ## Міграція
-1. `asUser` і кеш storageState per user. Codemod `new LoginPage(page).doLogin(email, pw)` → `const page = await asUser(email)`. Храповик: `doLogin(` у спеках, зараз 301.
-2. Один merged `test`, codemod імпортів. Храповик: локальні `mergeTests(` у спеках, зараз 37.
+1. `asUser` і кеш storageState per user. Codemod `new LoginPage(page).doLogin(email, pw)` → `const page = await asUser(email)`. Контрольний лічильник: `doLogin(` у спеках, зараз 301.
+2. Один merged `test`, codemod імпортів. Контрольний лічильник: локальні `mergeTests(` у спеках, зараз 37.
 3. Worker-scoped `api` з кешем токенів; `getUserApiTokenByEmail` у фікстурах зникає (35 місць).
 4. Teardown у document-фікстурах.
