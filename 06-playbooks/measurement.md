@@ -23,6 +23,7 @@
 | `.catch(() => false)` поза `is*/has*/check*` | ts-morph: ім'я методу, що містить catch | pages, components, base |
 | `.catch(() => {})` без коментаря над рядком | ts-morph | `src` |
 | `precoro_service` імпорти | regex | `src` |
+| файли > 1 500 / > 1 000 рядків | `wc -l` | спеки / решта `src` |
 
 ### Baseline і CI
 
