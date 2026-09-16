@@ -1,10 +1,12 @@
 # Цільова архітектура: огляд
 
+Цей розділ показує **як має виглядати** кожен шар. Чому саме так: `03-decisions/`. У якому порядку: `05-roadmap/`. Що є зараз: `01-context/`.
+
 ```
 tests/            специфікації: describe + test.step + expect; жодного preparation через UI
   └─ fixtures/    один merged `test`; фікстури стану: asUser, company, confirmedPo, approvedInvoice ...
        ├─ api/        publicApi (зі Swagger) + internalApi (ручні, позначені)
-       ├─ data/       реєстр компаній і архетипів, builders, teardown
+       ├─ data/       реєстр компаній і архетипів, маніфест снапшоту, builders, teardown
        └─ config/     EnvConfig + override на середовище + zod для env
 pages/            сторінки з компонентами (Locator-поля), без assertion, без кроків
 components/       ItemsTable, Attachments, Comments, StatusBadge, ConfirmModal, Toast ...
@@ -12,15 +14,14 @@ components/       ItemsTable, Attachments, Comments, StatusBadge, ConfirmModal, 
 
 Потік тесту: фікстура створює стан через API → тест відкриває сторінку одразу в потрібному місці → дія через компонент → `expect(locator)`.
 
-## Файли цього розділу
-| Файл | Шар | Статус |
+| Файл | Шар | ADR |
 |---|---|---|
-| `config.md` | Конфіг і середовища | Draft, ADR-002 |
-| `fixtures-and-test-object.md` | Фікстури, один `test`, логін, apiClient | draft |
-| `api-client.md` | Клієнт зі Swagger, internal API | proposed, ADR-005 |
-| `data-and-companies.md` | Реєстр компаній, архетипи, teardown, ізоляція | draft |
-| `page-layer.md` | Компоненти замість mixin-ів | proposed, ADR-004 |
-| `ci-tiering-and-projects.md` | Проекти, воркери, tiering, репортери | draft |
+| `config.md` | Конфіг і середовища | 002 |
+| `fixtures-and-test-object.md` | Фікстури, один `test`, логін, apiClient | ще нема |
+| `api-client.md` | Клієнт зі Swagger, internal API | 005 |
+| `data-and-companies.md` | Реєстр компаній, архетипи, teardown, ізоляція | ще нема |
+| `page-layer.md` | Компоненти замість mixin-ів | 004 |
+| `ci-tiering-and-projects.md` | Проекти, воркери, tiering, репортери | 006 частково |
 
 ## Межа "не чіпаємо" у фазах 0–1
 - Mixin-ланцюжок і Babel-плагін: живуть до фази 3.

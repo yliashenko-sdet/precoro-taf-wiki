@@ -1,8 +1,7 @@
 # Конфіг і середовища
 
-Рішення: ADR-002.
+ADR-002. Задачі T0-11, T1-01, T1-02.
 
-## Форма
 ```ts
 // src/config/schema.ts
 export interface EnvConfig {
@@ -16,17 +15,15 @@ export interface EnvConfig {
 }
 export const secrets = z.object({ MAIN_USER_PASSWORD: z.string(), ... }).parse(process.env);
 ```
-- `environments/base.ts` містить усе спільне; `environments/pre_dev.ts` лише те, що відрізняється.
-- Вибір середовища: одна змінна `RUN_ENV`. `LOCAL_SERVER_URL` стає полем `baseUrl` у override, а не селектором.
-- Шляхи сторінок: у page-об'єктах як `static path = '/manage/users'`; документи як `PoPage.url(idn)`.
-- Юзери: у реєстрі компаній, не в конфігу.
-- Мова і дата: явні параметри прогону, пишуться в репорт.
 
-## Що видаляється
-`src/config/ini/*`, `read_configs.ts` (609 рядків), `run_env.ts`, пакет `ini`, `verify-.env-configs.js` з README.
+- `environments/base.ts` містить усе спільне; override на середовище лише те, що відрізняється, ~15 рядків.
+- Вибір середовища однією змінною `RUN_ENV`; `LOCAL_SERVER_URL` стає полем `baseUrl` у override, не селектором.
+- Шляхи сторінок у page-об'єктах: `static path = '/manage/users'`, документи `PoPage.url(idn)`.
+- Юзери в реєстрі компаній (`data-and-companies.md`), не в конфігу.
+- Мова і дата прогону явні параметри, пишуться в репорт.
 
-## Контрольний лічильник
-`grep -c "Constants\." src/**` → 0. Зараз 791.
+## Що зникає
+`src/config/ini/*`, `read_configs.ts`, `run_env.ts`, пакет `ini`.
 
 ## Відкрито
-- Прод-профіль: чи потрібен, і під якими запобіжниками.
+Прод-профіль: чи потрібен, і під якими запобіжниками (питання #8).

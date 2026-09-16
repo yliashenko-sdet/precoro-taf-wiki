@@ -1,6 +1,6 @@
 # Page-шар
 
-Рішення: ADR-004 (proposed). Робиться після API-preparation.
+ADR-004. Фаза 3, після API-preparation.
 
 ## Ціль
 ```ts
@@ -46,12 +46,3 @@ class TaxesPage extends SettingsPage {       // не документ
 
 ## Що зникає
 13 mixin-ів, `declare`-поля, `strip-declare-class-fields.js`, `locators!:` повтори, `'{}'` плейсхолдери і `.replace('{}')`, форковані сторінки, `*ByIndex` методи там, де є семантичний локатор, `expect*` методи в page-класах (599).
-
-## Порядок
-1. Компоненти для того, що найчастіше в тестах: items table, status, toast, confirm modal, attachments.
-2. Нові тести лише через компоненти.
-3. Форковані пари зливаються через компоненти.
-4. Legacy mixin-и видаляються при нулі call-site.
-
-## Контрольні лічильники
-`this.xxxLocators.` (1 814), `xpath=` (1 047), `expect(` у pages (700), `force`/`clickUsingJavascript` (~420), `.first()` (717).
