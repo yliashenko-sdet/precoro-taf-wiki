@@ -13,6 +13,7 @@
 | T0-03 | Секрети з репозиторію | MailPit, ControlClient, прод-токен в env; ротовані; git-історія перевірена | secrets 3 → 0 | 1 + інфра | blocked |  |
 | T0-04 | Розширити `metrics-reporter` (є на гілці): top-50 за тривалістю, мова прогону, perFile, perTag | Поля є в `latest.json`; дашборд їх показує |  | 1, інфра-AQA | wip на гілці |  |
 | T0-15 | Лічильник запитів на тест: браузер (`context.on('request')`) і API (`withApiStep`) → анотація → `metrics-reporter` | Поля `browserRequests`, `apiRequests` на тест і на проект у `latest.json`; цифра нічного прогону в `metrics.md`. Інтеграція: `06-playbooks/measurement.md`, труба 3 | навантаження на тест | 1 | todo |  |
+| T0-16 | Накласти таймлайн одного нічного прогону (start/stop тестів із результатів) на Grafana Precorino (php-fpm, OOM, 5xx, MySQL) разом із Дмитром Ясмо | Список падінь і flaky того прогону з позначкою, чи збігаються з піком сервера; висновок, яка частка flaky це середовище | категорія падінь | 1 | todo |  |
 | T0-05 | Частка preparation зі степів Allure | Скрипт по allure-results; цифра в `metrics.md` |  | 1 | todo |  |
 | T0-06 | `--last-failed` у Jenkins-джобі | Параметр "rerun failed only"; `test-results` зберігається між білдами |  | 0.5, інфра-AQA | todo | 006 |
 | T0-07 | Явна мова прогону | `LANGUAGE=auto` видалено; матриця в CI; мова в назві білда |  | 0.5 | todo |  |
