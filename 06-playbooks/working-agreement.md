@@ -8,7 +8,7 @@ _organized: true
 ## Де що
 
 - Репозиторій TAF: `/Users/yevhenlyashenko/Work/src/precoro-e2e-playwright` (Bitbucket).
-- Ця вікі: `/Users/yevhenlyashenko/Work/Precoro/taf-wiki`, окремий git. Поки не перенесена в репо як `docs/taf-2.0/`.
+- Ця вікі: `/Users/yevhenlyashenko/Work/Precoro/taf-wiki`, remote `https://github.com/yliashenko/precoro-taf-wiki` (приватний, гілка `main`). Поки не перенесена в репо TAF як `docs/taf-2.0/`; це станеться після апруву плану.
 - Базова гілка для роботи: `<release | назва робочої гілки команди>`. Аудит зроблено на `release`; робоча гілка команди попереду (нові проекти po\_receive, matching, po\_from\_pr, spo).
 
 ## Гілки, коміти, PR
