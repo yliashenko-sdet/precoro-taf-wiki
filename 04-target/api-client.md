@@ -17,5 +17,5 @@
 ## Швидкі перемоги ще до генерації
 Дописати ~55 lifecycle-обгорток, яких бракує: `mass-approve`, `mass-reject`, `approve-review`, `take_over_revise` для всіх документів; `revise` для PR/WR/RFP/Expense; `receipts/receive_all`; `purchaseorders/send`, `manual_complete`, `approve_matching*`; `payments/pay`; `*_documents_import`; `*/revisions`. Це відкриває "документ у статусі X" без UI для дорогих проектів.
 
-## Храповик
+## Контрольний лічильник
 Імпорти `precoro_service` → 0. Покриття Swagger у клієнті: зараз ~177/507.

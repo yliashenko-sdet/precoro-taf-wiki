@@ -15,7 +15,7 @@ components/       ItemsTable, Attachments, Comments, StatusBadge, ConfirmModal, 
 ## Файли цього розділу
 | Файл | Шар | Статус |
 |---|---|---|
-| `config.md` | Конфіг і середовища | accepted, ADR-002 |
+| `config.md` | Конфіг і середовища | Draft, ADR-002 |
 | `fixtures-and-test-object.md` | Фікстури, один `test`, логін, apiClient | draft |
 | `api-client.md` | Клієнт зі Swagger, internal API | proposed, ADR-005 |
 | `data-and-companies.md` | Реєстр компаній, архетипи, teardown, ізоляція | draft |

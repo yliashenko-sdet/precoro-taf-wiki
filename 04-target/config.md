@@ -25,7 +25,7 @@ export const secrets = z.object({ MAIN_USER_PASSWORD: z.string(), ... }).parse(p
 ## Що видаляється
 `src/config/ini/*`, `read_configs.ts` (609 рядків), `run_env.ts`, пакет `ini`, `verify-.env-configs.js` з README.
 
-## Храповик
+## Контрольний лічильник
 `grep -c "Constants\." src/**` → 0. Зараз 791.
 
 ## Відкрито

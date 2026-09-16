@@ -1,5 +1,5 @@
 # ADR-003: Репортинг знімається з тестового коду
-Статус: accepted
+Статус: Draft
 Дата: 2026-09-16
 
 ## Контекст
@@ -21,7 +21,7 @@
 - Категорії падінь для flaky-політики або з Allure categories, або з JSON за день, якщо Allure приберуть.
 
 ## Міграція
-Codemod у три проходи: `allure.step` → `test.step`; `attachment` → `attach`; `description/suite/subSuite/displayName` → видалення з ручним переглядом описів, що не дублюють назву. Храповик: кількість `allure.` у `src/ui`, ціль 0 (крім `requests.ts`).
+Codemod у три проходи: `allure.step` → `test.step`; `attachment` → `attach`; `description/suite/subSuite/displayName` → видалення з ручним переглядом описів, що не дублюють назву. Контрольний лічильник: кількість `allure.` у `src/ui`, ціль 0 (крім `requests.ts`).
 
 ## Відхилені альтернативи
 - Лишити як є: прив'язка до репортера, кроки не в трейсі.
