@@ -11,9 +11,9 @@
 | T0-01 | Зелений `tsc --noEmit` | | 0 помилок; крок у Jenkins червоний при помилці | tsc 3 → 0 | 0.5 | todo |
 | T0-02 | Зелений `eslint` без ослаблення правил | | 0 помилок; крок у Jenkins | eslint 109 → 0 | 1–2 | todo |
 | T0-03 | Секрети з репозиторію | | MailPit, ControlClient, прод-токен в env; ротовані; git-історія перевірена | secrets 3 → 0 | 1 + інфра | blocked |
-| T0-04 | JSON-репортер і дашборд: machine-time, top-50, мова | | `json` у reporter; дашборд читає його | | 1–2, з інфра-AQA | blocked |
+| T0-04 | JSON-репортер і дашборд: machine-time, top-50, мова | | `json` у reporter; дашборд читає його | | 1–2, інфра-AQA | todo |
 | T0-05 | Частка preparation зі степів Allure | | Скрипт по allure-results; цифра в `metrics.md` | | 1 | todo |
-| T0-06 | `--last-failed` у Jenkins-джобі | 006 | Параметр "rerun failed only"; `test-results` зберігається між білдами | | 0.5 + Jenkins | blocked |
+| T0-06 | `--last-failed` у Jenkins-джобі | 006 | Параметр "rerun failed only"; `test-results` зберігається між білдами | | 0.5, інфра-AQA | todo |
 | T0-07 | Явна мова прогону | | `LANGUAGE=auto` видалено; матриця в CI; мова в назві білда | | 0.5 | todo |
 | T0-08 | Мертві проекти і globalSetup | | 3 проекти видалені; логін лише для проектів із тестами | | 0.5 | todo |
 | T0-09 | Трейс на першому ретраї | 006 | `base_fixtures.ts`; trace є для першого падіння | | 0.5 | todo |
@@ -41,7 +41,7 @@
 | T1-12 | Codemod `expect(await isVisible())` → web-first | | lint без винятків | 511 → 0 | 2 | todo |
 | T1-13 | Codemod sleeps | | `no-wait-for-timeout` error | 121 → 0 | 2–3 | todo |
 | T1-14 | Розбиття minor/common/invoice/items/budgets | | Жоден проект > 45 хв | найдовший проект | 2 + юзери | todo |
-| T1-15 | Tiering-теги і Jenkins-параметр рівня | | `@gate` ≤ 15 хв, збалансований | | 3 | todo |
+| T1-15 | Tiering-теги і Jenkins-параметр рівня | | Початковий розподіл `@gate/@module/@nightly` з пріоритетів Qase через `@qase(id)`; `@gate` ≤ 15 хв, збалансований по проектах | | 3 | todo |
 | T1-16 | Retries 1 + flaky-метрика + карантин | 006 | Конфіг; дашборд; політика узгоджена | | 1 + розмова | todo |
 | T1-17 | API-preparation: punchout, spo, po_receive, budgets | | | s/test по проектах | 8 | todo |
 
