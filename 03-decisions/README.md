@@ -11,6 +11,7 @@
 | [004](ADR-004-page-composition-over-mixins.md) | Композиція компонентів замість mixin-ланцюжка | Draft (proposed) |
 | [005](ADR-005-generated-api-client.md) | API-клієнт генерується зі Swagger | Draft (proposed) |
 | [006](ADR-006-retries-flaky-policy.md) | Політика ретраїв і flaky | Draft (proposed) |
+| [007](ADR-007-test-data-source-of-truth.md) | Джерело правди для автотестових даних: seed з архетипів, не прод | Draft (proposed) |
 
 ## Шаблон
 ```
