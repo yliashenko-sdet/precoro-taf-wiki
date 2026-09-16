@@ -1,23 +1,22 @@
 # Фікстури і один `test`
 
-Статус: draft. Рішення ще не оформлене в ADR; цей файл є основою для нього.
+ADR ще нема; цей файл є його основою. Задачі T1-03, T1-04, T1-05, T1-06, T1-08.
 
-## Проблема
-22 окремі `test`-об'єкти; 37 спеків збирають `mergeTests` самі; `apiClient` test-scoped і читає токен з БД щотесту; 498 UI-логінів у спеках попри storageState; document-фікстури без teardown.
-
-## Ціль
+## Форма
 - `fixtures/index.ts` експортує один `test` і `expect`. Спеки імпортують лише звідти.
-- Worker-scoped: `config`, `company` (об'єкт із реєстру, з юзерами і токенами), `api` (клієнт головного юзера з кешем токенів).
-- Test-scoped: `asUser(email)` повертає `Page` у новому контексті з кешованим storageState для цього юзера; `page` за замовчуванням це головний юзер компанії.
-- Фікстури стану іменуються за результатом, не за процесом: `draftPo`, `confirmedPo`, `approvedInvoice`, `receivedReceipt`. Кожна після `use()` видаляє, що створила, через `DELETE /{doc}/{idn}/delete`.
-- Фікстури налаштувань: `withSetting({ key: value })` застосовує і повертає назад у teardown.
+- Worker-scoped: `config`, `company` (об'єкт із реєстру з юзерами і токенами), `api` (клієнт головного юзера з кешем токенів).
+- Test-scoped: `page` головного юзера компанії; `asUser(email)` повертає `Page` у новому контексті з кешованим storageState цього юзера.
+- Фікстури стану іменуються за результатом: `draftPo`, `confirmedPo`, `approvedInvoice`, `receivedReceipt`. Після `use()` видаляють створене через `DELETE /{doc}/{idn}/delete`.
+- Фікстури налаштувань: `withSetting({ key: value })` застосовує і повертає в teardown.
+
+```ts
+test('approver sees PO in pending list', async ({ confirmedPo, asUser, company }) => {
+  const page = await asUser(company.users.approver);
+  await page.goto(PoPage.url(confirmedPo.idn));
+  await expect(new PoPage(page).status.badge).toHaveText('Pending');
+});
+```
 
 ## Логін
-- storageState per user, не per project. Кеш у `.auth/<env>/<email>.json`, генерується лениво при першому запиті.
-- `logout_url` у тестах заборонено, бо PHPSESSID серверний і logout вбиває сесію всього проекту. Тести на logout ізолюються в окремий контекст.
-
-## Міграція
-1. `asUser` і кеш storageState per user. Codemod `new LoginPage(page).doLogin(email, pw)` → `const page = await asUser(email)`. Контрольний лічильник: `doLogin(` у спеках, зараз 301.
-2. Один merged `test`, codemod імпортів. Контрольний лічильник: локальні `mergeTests(` у спеках, зараз 37.
-3. Worker-scoped `api` з кешем токенів; `getUserApiTokenByEmail` у фікстурах зникає (35 місць).
-4. Teardown у document-фікстурах.
+- storageState per user, кеш `.auth/<env>/<email>.json`, генерується лениво.
+- `logout_url` у тестах заборонено: PHPSESSID серверний, logout вбиває сесію проекту. Тести на logout в окремому контексті.
