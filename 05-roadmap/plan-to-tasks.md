@@ -2,6 +2,7 @@
 _organized: true
 _favorite: true
 _favorite_index: 2
+_width: wide
 ---
 # План → Задачі
 
@@ -43,7 +44,7 @@ _favorite_index: 2
 | [T0-01](tasks/T0-01.md) | Зелений `tsc --noEmit` | 0 помилок; крок у Jenkins червоний при помилці | tsc 3 → 0 | 0.5 | wip |  |
 | [T0-13](tasks/T0-13.md) | Контрольні лічильники: скрипт, baseline, CI-гейт "тільки вниз" | `debt-baseline.json` дорівнює правді; PR із ростом червоний; `metrics/debt.jsonl` на мержі | усі лічильники з `metrics.md` | 1–2 | todo | 001 |
 | [T0-02](tasks/T0-02.md) | Зелений `eslint` без ослаблення правил | 0 помилок; крок у Jenkins | eslint 109 → 0 | 1–2 | todo |  |
-| [T0-15](tasks/T0-15.md) | Лічильник запитів на тест: браузер (`context.on('request')`) і API (`withApiStep`) → анотація → `metrics-reporter` | Поля `browserRequests`, `apiRequests` на тест і на проект у `latest.json`; цифра нічного прогону в `metrics.md`. Інтеграція: `06-playbooks/measurement.md`, труба 3 | навантаження на тест | 1 | todo |  |
+| [T0-15](tasks/T0-15.md) | Кількість запитів на тест: браузер (`context.on('request')`) і API (`withApiStep`) → анотація → `metrics-reporter` | Поля `browserRequests`, `apiRequests` на тест і на проект у `latest.json`; цифра нічного прогону в `metrics.md`. Інтеграція: `06-playbooks/measurement.md`, труба 3 | навантаження на тест | 1 | todo |  |
 | T0-12 | Маніфест снапшоту + preflight у globalSetup | Маніфест для 5 найбільших компаній; preflight падає з точним повідомленням і на seed, і на Precorino |  | 2 | todo |  |
 | [T0-11](tasks/T0-11.md) | `EnvConfig` зі списку використаних ключів | Інтерфейс; звіт мертвих і відсутніх ключів |  | 1 | todo | 002 |
 | [T0-09](tasks/T0-09.md) | Трейс для першої невдалої спроби (`retain-on-failure` замість трейсу лише на останньому ретраї); ціна по часу і диску виміряна на нічному прогоні до вмикання на гілках | Flaky-тест має трейс невдалої спроби; overhead записано в `metrics.md` |  | 0.5 + замір | todo | 006 |
