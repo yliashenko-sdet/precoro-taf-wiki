@@ -2,6 +2,7 @@
 _organized: true
 _favorite: true
 _favorite_index: 1
+_width: wide
 ---
 # Болі → План
 
