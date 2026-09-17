@@ -1,5 +1,6 @@
 ---
 _organized: true
+_width: wide
 ---
 # Модулі в Asana і теги в TAF
 
