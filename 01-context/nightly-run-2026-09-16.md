@@ -1,3 +1,7 @@
+---
+_favorite: true
+_favorite_index: 5
+---
 # Нічний прогін 2026-09-16: що видно з Allure і метрик
 
 Джерело: `metrics/summary.md`, `latest.json`, Allure-репорт (2 213 тест-кейсів із кроками і таймінгами, timeline). Гілка `fix/11-09-2026`, коміт `d4927c3`, Windows-агент, 9 воркерів, 1 ретрай. Це baseline-прогін для `05-roadmap/metrics.md`.
