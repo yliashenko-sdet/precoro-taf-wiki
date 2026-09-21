@@ -23,31 +23,31 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-1
 
 ## Контрольні показники коду
 
-Можуть лише зменшуватись. Спосіб: **механічно** це codemod без прогону; **з прогоном** це codemod порціями з підтвердженням тестами; **за доказами** це спершу інструментування (fallback із логом, категорії), потім рішення по кластерах, бо кожен випадок може прикривати поведінку продукту.
+Можуть лише зменшуватись. Спосіб: **codemod** без прогону; **codemod + local run** порціями з підтвердженням зачеплених тестів локально; **instrument + nightly run** спершу інструментований fallback із логом, потім один повний нічний прогін і рішення по кластерах, бо кожен випадок може прикривати поведінку продукту.
 
 | Показник | Baseline | Ціль | Спосіб |
 | --- | --- | --- | --- |
-| `allure.` у `src/ui` | ~12 000 | 0 | механічно |
-| `expect(await` у спеках | 511 | 0 | механічно |
-| Value-assertion на локаторах | ~5 000 | ≤ 500 | з прогоном |
-| `waitForTimeout` + `setTimeout` sleeps | 121 | 0 | за доказами |
-| `.catch(() => false)` поза предикатами | ~211 | 0 | за доказами |
-| `.catch(() => {})` | 131 | 0 | за доказами |
-| `force`/`clickUsingJavascript`/`dispatchEvent` | ~420 | ≤ 20, кожен з коментарем | за доказами |
-| `doLogin`/`loginAs` у спеках | 498 | 0 | механічно |
-| `db.` у спеках | 1 811 | 0 | з прогоном |
-| `Constants.` | 791 | 0 | механічно |
-| Локальні `mergeTests` у спеках | 37 | 0 | механічно |
-| `xpath=` у локаторах | 1 047 | ≤ 100 | з прогоном |
-| `this.xxxLocators.` | 1 814 | 0 | механічно |
-| Імпорти `precoro_service` | усі | 0 | з прогоном |
-| Spec-файлів > 1 500 рядків | 27 | 0 | з прогоном |
-| Не-spec файлів > 1 000 рядків | 10 | 0 | з прогоном |
-| INI-файлів | 7 | 0 | механічно |
-| `tsc` помилок / `eslint` помилок | 3 / 109 | 0 / 0 | з прогоном |
-| Тестів `@not_for_isolated_env` (не біжать на гілках) | 1 087 (42% прогону, 12h) | 0 | за доказами |
-| Секретів у репозиторії | 3 типи | 0 | механічно |
-| Swagger-ендпоінтів у клієнті | ~177/507 | 100% використаних | механічно |
+| `allure.` у `src/ui` | ~12 000 | 0 | codemod |
+| `expect(await` у спеках | 511 | 0 | codemod |
+| Value-assertion на локаторах | ~5 000 | ≤ 500 | codemod + local run |
+| `waitForTimeout` + `setTimeout` sleeps | 121 | 0 | instrument + nightly run |
+| `.catch(() => false)` поза предикатами | ~211 | 0 | instrument + nightly run |
+| `.catch(() => {})` | 131 | 0 | instrument + nightly run |
+| `force`/`clickUsingJavascript`/`dispatchEvent` | ~420 | ≤ 20, кожен з коментарем | instrument + nightly run |
+| `doLogin`/`loginAs` у спеках | 498 | 0 | codemod |
+| `db.` у спеках | 1 811 | 0 | codemod + local run |
+| `Constants.` | 791 | 0 | codemod |
+| Локальні `mergeTests` у спеках | 37 | 0 | codemod |
+| `xpath=` у локаторах | 1 047 | ≤ 100 | codemod + local run |
+| `this.xxxLocators.` | 1 814 | 0 | codemod |
+| Імпорти `precoro_service` | усі | 0 | codemod + local run |
+| Spec-файлів > 1 500 рядків | 27 | 0 | codemod + local run |
+| Не-spec файлів > 1 000 рядків | 10 | 0 | codemod + local run |
+| INI-файлів | 7 | 0 | codemod |
+| `tsc` помилок / `eslint` помилок | 3 / 109 | 0 / 0 | codemod + local run |
+| Тестів `@not_for_isolated_env` (не біжать на гілках) | 1 087 (42% прогону, 12h) | 0 | instrument + nightly run |
+| Секретів у репозиторії | 3 типи | 0 | codemod |
+| Swagger-ендпоінтів у клієнті | ~177/507 | 100% використаних | codemod |
 
 Як збираються показники і метрики прогону: `06-playbooks/measurement.md`.
 
