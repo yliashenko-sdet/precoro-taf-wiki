@@ -9,6 +9,7 @@ Precoro: procurement SaaS. Документообіг PR → RFP → PO → Rece
 90% прод-багів пов'язані з комбінацією налаштувань, а не з базовим флоу. Тест-кейси історично писались від функціоналу, а покриття комбінацій додавалось реактивно після прод-багів.
 
 ## UI змінюється часто
+Фронтенд на Vue (`data-v-app`, кореневі елементи на кшталт `#PurchaseRequisitionIndexApp`). `data-test-id` у продукті є: на сторінці списку PR їх 256 (перевірено 2026-09-21). Дві конвенції імен одночасно: `breadcrumbs.link_dashboard` (область.тип_назва) і `button:save`, `toast:success` (тип:назва). Покриття не повне: там, де test-id нема, TAF іде XPath по тексту або структурі. Глобальні накладки мають стабільні id: `#sessionExpirePopup`, `#switchedCompanyPopup`, `#SwitchToMobileAppBanner`, `.notification-bar--outdated-browser`.
 Редизайни і зміни інтерфейсу відбуваються регулярно; в Asana є модулі "New Design" і "Front". Один popup уже клав усі тести (P6). Відповідь фреймворку на це: `04-target/page-layer.md`, розділ "Редизайни".
 
 ## Середовища
