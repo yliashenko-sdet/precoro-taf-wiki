@@ -1,6 +1,7 @@
 ---
 _favorite: true
 _favorite_index: 5
+_width: wide
 ---
 # Нічний прогін 2026-09-16: що видно з Allure і метрик
 
