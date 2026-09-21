@@ -1,5 +1,7 @@
 ---
 _organized: true
+_favorite: true
+_favorite_index: 4
 ---
 # Метрики
 
