@@ -20,6 +20,10 @@ _organized: true
 
 ## Підключення до Claude Code
 
+Поки вікі не в репозиторії TAF: відкривати сесію Claude Code у теці вікі, там є `CLAUDE.md`, який задає порядок читання і правила. Для сесій у репозиторії TAF додати в глобальний `~/.claude/CLAUDE.md` рядок: "Для роботи над Precoro TAF спершу прочитай /Users/yevhenlyashenko/Work/Precoro/taf-wiki/CLAUDE.md".
+
+Після переїзду в репозиторій:
+
 Скопіювати теку в репозиторій як `docs/taf-2.0/` і додати в `CLAUDE.md` репозиторію:
 
 ```
