@@ -1,5 +1,6 @@
 ---
 _organized: true
+_width: wide
 ---
 # Glossary
 
