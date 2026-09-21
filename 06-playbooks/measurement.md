@@ -8,25 +8,7 @@ _organized: true
 ## Труба 1. Контрольні показники (джерело: код)
 
 ### Скрипт
-
-`scripts/debt-counters.ts` → `{ counters: { name: number }, files: { name: { path: count } } }`.
-
-| Показник | Спосіб | Область |
-| --- | --- | --- |
-| `allure.` | regex | `src/ui`, крім `requests.ts` |
-| `Constants.` | regex | `src` |
-| `doLogin(` / `loginAs` / `new LoginPage(` | regex | спеки |
-| `db.` | regex | спеки |
-| `expect(await` | regex | спеки |
-| `waitForTimeout(` / inline sleep | regex | `src` |
-| `force: true` / `clickUsingJavascript(` / `dispatchEvent('click'` | regex | `src` |
-| `xpath=` | regex | `*_locators.ts` |
-| `this.xxxLocators.` | regex | pages |
-| локальні `mergeTests(` | regex | спеки |
-| `.catch(() => false)` поза `is*/has*/check*` | ts-morph: ім'я методу, що містить catch | pages, components, base |
-| `.catch(() => {})` без коментаря над рядком | ts-morph | `src` |
-| `precoro_service` імпорти | regex | `src` |
-| файли > 1 500 / > 1 000 рядків | `wc -l` | спеки / решта `src` |
+`scripts/debt-counters.ts` → `{ counters: { name: number }, files: { name: { path: count } } }`. Перелік показників і baseline: `05-roadmap/metrics.md`. Regex-показники через `Project.getSourceFiles()` і `getFullText()`; AST-показники (наприклад `catch(() => false)` поза `is*/has*/check*`) через обхід `CallExpression` у ts-morph.
 
 ### Baseline і CI
 
