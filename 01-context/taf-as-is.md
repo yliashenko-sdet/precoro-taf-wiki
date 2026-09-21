@@ -36,7 +36,7 @@ _organized: true
 | Обходи actionability (`force`, `clickUsingJavascript`, `dispatchEvent`) | ~420 |
 | `.catch(() => false)` поза предикатами | ~211 |
 | `.catch(() => {})` | 131 |
-| XPath у локаторах | 1 047, `getByTestId` 0 |
+| Локатори | 1 161 CSS по `data-test-id`, 1 047 XPath (365 із них теж на `data-test-id`); API `getByTestId` не використовується, усе рядками. Test-id у продукті є масово, XPath по тексту стоїть там, де їх нема |
 | Hard sleeps | 121 |
 | UI-логін у спеках попри storageState | 498 |
 | `allure.step` замість `test.step` | 10 243 |
