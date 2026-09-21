@@ -7,6 +7,9 @@ _organized: true
 
 Репозиторій TAF: `precoro-e2e-playwright` (TypeScript + Playwright, переклад із Python + Selenium у березні 2026).
 
+## Почни звідси
+`00-map.md`: уся історія на одній сторінці, три числа, з чого починаємо, що просимо. Хребет вікі це три файли: `01-context/pains.md` → `05-roadmap/pain-to-plan.md` → `05-roadmap/plan-to-tasks.md` з картками в `tasks/`. Усе інше довідка, яку відкривають за потреби.
+
 ## Як користуватись
 
 - **Початок сесії**: `00-status.md` каже, де ми і що далі; `06-playbooks/working-agreement.md` каже, як працювати в репозиторії і де зупинятись.
