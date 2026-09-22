@@ -94,6 +94,3 @@ testInfo.annotations.push({ type: 'load', description: JSON.stringify(counters) 
 - TAF: `debt-counters.ts`, `run-metrics.ts`, `weekly-report.ts`, CI-гейт.
 - Інфра-AQA: дашборд читає `metrics/*.jsonl` замість консольного логу; `parse-test-log.js` видаляється.
 
-## Обсяг
-
-Показники + CI-гейт: 1–2 дні. Обробка JSON-репорту: 1 день. Тижневий звіт: 1 день. Усе у фазі 0.
