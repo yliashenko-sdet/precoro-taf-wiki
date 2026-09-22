@@ -1,6 +1,4 @@
 ---
-_favorite: true
-_favorite_index: 5
 _width: wide
 ---
 # Карта: що ми робимо і чому
