@@ -1,2 +1,5 @@
 .DS_Store
 **/.DS_Store
+
+# Agent context: local only, not for the shared repo
+08-agent/
