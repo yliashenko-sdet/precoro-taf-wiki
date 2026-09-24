@@ -55,6 +55,8 @@ flowchart TD
 | Вказівка читати вікі | `~/.claude-precoro/CLAUDE.md` | вручну | кожна робоча сесія, автоматично |
 | Доступ до вікі і матеріалів | `~/.claude-precoro/settings.json`, `permissions.additionalDirectories` | вручну | кожна робоча сесія |
 | Модель за замовчуванням | `~/.claude-precoro/settings.json`, `model: claude-opus-5-5`; діє, лише поки ніде не задано `ANTHROPIC_MODEL` | вручну | кожна нова робоча сесія |
+| GitHub-акаунт для пушу | робочі сесії: `~/.claude-precoro/settings.json`, `env.GH_CONFIG_DIR=~/.config/gh-precoro` (лише `yliashenko-sdet`); решта машини, зокрема Claude Desktop: стандартний `~/.config/gh`, активний `yliashenko`. Git бере токен через `gh auth git-credential`; токени в Keychain | вручну, `gh auth switch` | `git push` і `gh` у сесії |
+| Автор комітів | локальний `git config` у репо TAF і вікі: `Yevhen Liashenko <yevhen.liashenko@precoro.com>`; глобальний лишився особистим | вручну | `git commit` |
 | Жива пам'ять Precoro | `~/.claude-precoro/projects/-Users-yevhenlyashenko-Work-src-precoro-e2e-playwright/memory` | агент, автоматично | робоча сесія з теки репо TAF |
 | Заморожена копія пам'яті | `~/.claude/projects/-Users-yevhenlyashenko-Work-src-precoro-e2e-playwright/memory` | ніхто після 24.09 | особиста сесія, якщо стартує в репо TAF |
 | Інструкції проєкту | `CLAUDE.md` і `.claude/skills` у репо TAF, git | команда AQA | будь-яка сесія в репо |
@@ -69,6 +71,7 @@ flowchart TD
 - [x] Жива пам'ять Precoro в одному місці; дубль для теки вікі перенесено в кошик (копії були ідентичні).
 - [x] Робочі сесії бачать `~/Work/Precoro` через `additionalDirectories`, без `--add-dir`.
 - [x] Модель робочих сесій за замовчуванням: `"model": "claude-opus-5-5"` у `~/.claude-precoro/settings.json`. Порядок пріоритету моделі: вибір у сесії (перемикач, `/model`) → `--model` → змінна `ANTHROPIC_MODEL` → `model` у `settings.json`. Тому змінну `ANTHROPIC_MODEL=claude-opus-4-8` з налаштувань VS Code прибрано 24.09: вона перебивала `settings.json`, і нові розмови стартували на Opus 4.8.
+- [x] Пуш розділено за каталогом конфігурації (24.09): `git credential fill` у робочій сесії дає `yliashenko-sdet`, без `GH_CONFIG_DIR` дає `yliashenko`. Вбудований Source Control VS Code і звичайний термінал змінну не бачать і пушать як `yliashenko`. `gh auth logout` для `yliashenko-sdet` у стандартному `gh` не робити: Keychain спільний, це зламає робочий маршрут.
 - [ ] `claude` у терміналі без змінної працює з особистим `~/.claude`, але залогінений робочим акаунтом (`~/.claude.json`). Для особистого використання потрібен `/login` особистим акаунтом.
 - [ ] Чи не зачепив робочий вхід десктопний застосунок, окремо не перевірено; у нього власний вхід.
 - [ ] Змінна діє на всі вікна VS Code: розширення дозволяє задати її лише на рівні машини, не для теки.
@@ -87,7 +90,10 @@ flowchart TD
 
 - `/status`: робоча пошта, Working folder = репо TAF, Model = `claude-opus-5-5`.
 - `/memory` → Open auto-memory folder: шлях починається з `~/.claude-precoro/projects/`, ліворуч одна тека проєкту.
+- `gh auth status` у робочій сесії: один акаунт, `yliashenko-sdet`.
 
 ## Відкат
+
+GitHub-маршрут: прибрати `env.GH_CONFIG_DIR` з `~/.claude-precoro/settings.json`, тоді робочі сесії беруть стандартний `gh`.
 
 Прибрати елемент `CLAUDE_CONFIG_DIR` з `claudeCode.environmentVariables` або повернути `settings.json.bak-2026-09-24` поруч із налаштуваннями VS Code; Reload Window.
