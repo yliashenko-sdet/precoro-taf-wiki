@@ -52,13 +52,16 @@
 
 ## Запуск
 
-Робочі сесії лише з репо TAF, у терміналі VS Code, на корпоративному акаунті:
+Робочі сесії на корпоративному акаунті з каталогом конфігурації `~/.claude-precoro`, лише з репо TAF.
+
+- **Основний шлях: розширення Claude для VS Code.** У налаштуваннях користувача VS Code в `claudeCode.environmentVariables` задано `CLAUDE_CONFIG_DIR=/Users/yevhenlyashenko/.claude-precoro`, тож усі сесії розширення йдуть у робочий каталог. У VS Code відкривати лише теку репо TAF, без multi-root: тека сесії визначає, яку пам'ять вона бере. Доступ до вікі і матеріалів дає `permissions.additionalDirectories` у `~/.claude-precoro/settings.json`.
+- **Запасний шлях: CLI в терміналі:**
 
 ```bash
-cd ~/Work/src/precoro-e2e-playwright && CLAUDE_CONFIG_DIR=~/.claude-precoro claude --add-dir ~/Work/Precoro
+cd ~/Work/src/precoro-e2e-playwright && CLAUDE_CONFIG_DIR=~/.claude-precoro claude
 ```
 
-Не запускати з теки вікі: пам'ять прив'язана до теки старту.
+Не запускати з теки вікі: пам'ять прив'язана до теки старту. Перевірка після старту: `/status` показує робочу пошту і теку репо TAF; "Open auto-memory folder" у `/memory` веде в `~/.claude-precoro/projects/...`.
 
 ## Стартовий промпт для нової сесії
 
