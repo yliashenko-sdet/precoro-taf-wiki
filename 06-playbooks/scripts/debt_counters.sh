@@ -14,5 +14,8 @@ c "db. in specs"           '\bdb\.[a-zA-Z]+\('               src/ui/web/tests
 c "Constants."             'Constants\.'
 c "mergeTests in specs"    'mergeTests\('                    src/ui/web/tests
 c "xpath="                 'xpath='
+c "timeout: N literals"    'timeout:[[:space:]]*[0-9]+'       src/ui/web
+c "positional nth/first/last" '\.nth\(|\.first\(\)|\.last\(\)' src/ui/web
 c "this.xxxLocators."      'this\.[a-zA-Z]+Locators\.'       src/ui
 printf '%-40s %s\n' "spec files > 1500 lines" "$(find src/ui/web/tests -name '*.spec.ts' -exec wc -l {} + | awk '$1>1500 && $2!="total"' | wc -l | tr -d ' ')"
+printf '%-40s %s\n' "if/else in spec files" "$(find src/ui/web/tests -name '*.spec.ts' -exec grep -hE '^[[:space:]]*(if|\} else)' {} + | wc -l | tr -d ' ')"

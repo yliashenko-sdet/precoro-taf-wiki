@@ -31,6 +31,7 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-1
 | `expect(await` у спеках | 511 | 0 | codemod |
 | Value-assertion на локаторах | ~5 000 | ≤ 500 | codemod + local run |
 | `waitForTimeout` + `setTimeout` sleeps | 121 | 0 | instrument + nightly run |
+| Літеральні `timeout: N` у `src/ui/web` | 488 (303 у pages) | 0 літералів; потрібні таймаути через іменовані константи з множником середовища | codemod + local run |
 | `.catch(() => false)` поза предикатами | ~211 | 0 | instrument + nightly run |
 | `.catch(() => {})` | 131 | 0 | instrument + nightly run |
 | `force`/`clickUsingJavascript`/`dispatchEvent` | ~420 | ≤ 20, кожен з коментарем | instrument + nightly run |
@@ -39,9 +40,11 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-1
 | `Constants.` | 791 | 0 | codemod |
 | Локальні `mergeTests` у спеках | 37 | 0 | codemod |
 | `xpath=` у локаторах | 1 047 | ≤ 100 | codemod + local run |
+| Позиційні `.nth()` / `.first()` / `.last()` | 751 | ≤ 100, кожен свідомий | codemod + local run |
 | `this.xxxLocators.` | 1 814 | 0 | codemod |
 | Імпорти `precoro_service` | усі | 0 | codemod + local run |
 | Spec-файлів > 1 500 рядків | 27 | 0 | codemod + local run |
+| `if` / `else` у spec-файлах | 1 436 | ≤ 100 | codemod + local run |
 | Не-spec файлів > 1 000 рядків | 10 | 0 | codemod + local run |
 | INI-файлів | 7 | 0 | codemod |
 | `tsc` помилок / `eslint` помилок | 3 / 109 | 0 / 0 | codemod + local run |
@@ -50,6 +53,8 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-1
 | Swagger-ендпоінтів у клієнті | 249 методів із відомим шляхом | 100% використаних |
 | Ендпоінтів під API-тестами | 71 із 507 (14%) | за ризиком, не відсоток від Swagger |
 | Ендпоінтів із реальною валідацією відповіді | 0 зі 172, які викликає TAF | 104 після T1-25, 121 після 17 схем, 172 після документування внутрішніх | codemod |
+
+Літеральні таймаути, позиційні селектори і розгалуження додані 2026-09-24 із задач в Asana: [Прибрати хардкодні таймаути в тестах](https://app.asana.com/0/0/1218768360241378), [Прибрати позиційні селектори](https://app.asana.com/0/0/1217787996352229), [Прибрати розгалуження логіки в тестах](https://app.asana.com/0/0/1217788091082407).
 
 Як збираються показники і метрики прогону: `06-playbooks/measurement.md`.
 
