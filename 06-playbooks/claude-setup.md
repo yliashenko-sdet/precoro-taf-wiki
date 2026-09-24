@@ -54,7 +54,7 @@ flowchart TD
 | Вхід робочим акаунтом | `~/.claude-precoro/.claude.json` і Keychain | `/login` | розширення, `claude` зі змінною |
 | Вказівка читати вікі | `~/.claude-precoro/CLAUDE.md` | вручну | кожна робоча сесія, автоматично |
 | Доступ до вікі і матеріалів | `~/.claude-precoro/settings.json`, `permissions.additionalDirectories` | вручну | кожна робоча сесія |
-| Модель за замовчуванням | `~/.claude-precoro/settings.json`, `model: claude-opus-5-5`; перебиває `ANTHROPIC_MODEL` з VS Code | вручну | кожна нова робоча сесія |
+| Модель за замовчуванням | `~/.claude-precoro/settings.json`, `model: claude-opus-5-5`; діє, лише поки ніде не задано `ANTHROPIC_MODEL` | вручну | кожна нова робоча сесія |
 | Жива пам'ять Precoro | `~/.claude-precoro/projects/-Users-yevhenlyashenko-Work-src-precoro-e2e-playwright/memory` | агент, автоматично | робоча сесія з теки репо TAF |
 | Заморожена копія пам'яті | `~/.claude/projects/-Users-yevhenlyashenko-Work-src-precoro-e2e-playwright/memory` | ніхто після 24.09 | особиста сесія, якщо стартує в репо TAF |
 | Інструкції проєкту | `CLAUDE.md` і `.claude/skills` у репо TAF, git | команда AQA | будь-яка сесія в репо |
@@ -68,7 +68,7 @@ flowchart TD
 - [x] Розширення VS Code працює з `~/.claude-precoro`. Перевірено з обох боків: на диску сесія з `entrypoint: claude-vscode`; у розширенні `/status` показує робочий акаунт і теку репо TAF, `/memory` веде в каталог з однією текою проєкту.
 - [x] Жива пам'ять Precoro в одному місці; дубль для теки вікі перенесено в кошик (копії були ідентичні).
 - [x] Робочі сесії бачать `~/Work/Precoro` через `additionalDirectories`, без `--add-dir`.
-- [x] Модель робочих сесій: `"model": "claude-opus-5-5"` у `~/.claude-precoro/settings.json` (24.09). Рядок у `settings.json` перебиває змінну `ANTHROPIC_MODEL=claude-opus-4-8`, яка лишилась у налаштуваннях VS Code; без нього робочі сесії йшли на Opus 4.8.
+- [x] Модель робочих сесій за замовчуванням: `"model": "claude-opus-5-5"` у `~/.claude-precoro/settings.json`. Порядок пріоритету моделі: вибір у сесії (перемикач, `/model`) → `--model` → змінна `ANTHROPIC_MODEL` → `model` у `settings.json`. Тому змінну `ANTHROPIC_MODEL=claude-opus-4-8` з налаштувань VS Code прибрано 24.09: вона перебивала `settings.json`, і нові розмови стартували на Opus 4.8.
 - [ ] `claude` у терміналі без змінної працює з особистим `~/.claude`, але залогінений робочим акаунтом (`~/.claude.json`). Для особистого використання потрібен `/login` особистим акаунтом.
 - [ ] Чи не зачепив робочий вхід десктопний застосунок, окремо не перевірено; у нього власний вхід.
 - [ ] Змінна діє на всі вікна VS Code: розширення дозволяє задати її лише на рівні машини, не для теки.
