@@ -50,6 +50,16 @@
 - Специфікація OpenAPI: `01-context/audit/precoro-openapi-2026-09-22.json`.
 - Скрипти аналізу: `06-playbooks/scripts/` (показники боргу, розбір Allure, пакування воркерів, покриття Swagger, пости Slack).
 
+## Запуск
+
+Робочі сесії лише з репо TAF, у терміналі VS Code, на корпоративному акаунті:
+
+```bash
+cd ~/Work/src/precoro-e2e-playwright && CLAUDE_CONFIG_DIR=~/.claude-precoro claude --add-dir ~/Work/Precoro
+```
+
+Не запускати з теки вікі: пам'ять прив'язана до теки старту.
+
 ## Стартовий промпт для нової сесії
 
 > Прочитай `/Users/yevhenlyashenko/Work/Precoro/taf-wiki/CLAUDE.md` і все з розділу "Порядок читання". Потім коротко: де ми зараз, яка наступна задача, що заблоковано і що ти питатимеш у мене першим. Нічого не змінюй.
