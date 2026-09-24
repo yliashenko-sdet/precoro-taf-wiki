@@ -9,7 +9,7 @@ _organized: true
 
 - Репозиторій TAF: `/Users/yevhenlyashenko/Work/src/precoro-e2e-playwright`; remote GitHub `avramch/precoro-e2e-playwright` (перевірено 2026-09-21). Гілки: `release` (аудит), `develop` (робоча, на 249 комітів попереду `release`), `fix/<дата>` гілки команди зливаються в `develop`.
 - Ця вікі: `/Users/yevhenlyashenko/Work/Precoro/taf-wiki`, remote `https://github.com/yliashenko-sdet/precoro-taf-wiki` (приватний, робочий акаунт, гілка `main`; з 2026-09-24, історія без `08-agent`). Поки не перенесена в репо TAF як `docs/taf-2.0/`; це станеться після апруву плану.
-- Базова гілка для роботи: `<develop або назва гілки команди; підтвердити>`. Аудит зроблено на `release`; `develop` попереду (нові проекти po\_receive, matching, po\_from\_pr, spo), тому показники T0-13 перераховуються на `develop`.
+- Базова гілка: `develop`. Від неї бранчуємось і в неї мерджимо PR (підтверджено 2026-09-24). `release` отримує `develop` цілком і хотфікси; `main` покинута з 11.09. Аудит зроблено на `release`; `develop` попереду (нові проекти po\_receive, matching, po\_from\_pr, spo), тому показники T0-13 перераховуються на `develop`.
 
 ## Гілки, коміти, PR
 
