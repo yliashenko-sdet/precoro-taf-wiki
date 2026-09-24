@@ -8,7 +8,7 @@ _organized: true
 ## Де що
 
 - Репозиторій TAF: `/Users/yevhenlyashenko/Work/src/precoro-e2e-playwright`; remote GitHub `avramch/precoro-e2e-playwright` (перевірено 2026-09-21). Гілки: `release` (аудит), `develop` (робоча, на 249 комітів попереду `release`), `fix/<дата>` гілки команди зливаються в `develop`.
-- Ця вікі: `/Users/yevhenlyashenko/Work/Precoro/taf-wiki`, remote `https://github.com/yliashenko/precoro-taf-wiki` (приватний, гілка `main`). Поки не перенесена в репо TAF як `docs/taf-2.0/`; це станеться після апруву плану.
+- Ця вікі: `/Users/yevhenlyashenko/Work/Precoro/taf-wiki`, remote `https://github.com/yliashenko-sdet/precoro-taf-wiki` (приватний, робочий акаунт, гілка `main`; з 2026-09-24, історія без `08-agent`). Поки не перенесена в репо TAF як `docs/taf-2.0/`; це станеться після апруву плану.
 - Базова гілка для роботи: `<develop або назва гілки команди; підтвердити>`. Аудит зроблено на `release`; `develop` попереду (нові проекти po\_receive, matching, po\_from\_pr, spo), тому показники T0-13 перераховуються на `develop`.
 
 ## Гілки, коміти, PR
@@ -16,7 +16,8 @@ _organized: true
 - Гілка на задачу: `taf2/T0-01-tsc-green`. Одна задача, один PR, не довше за день.
 - Коміти англійською, коротко, з ID задачі: `T0-01: fix 3 tsc errors`.
 - Codemod-и: окремий PR на кожен файл або групу файлів, щоб мержилось того ж дня.
-- Push і PR: у Yevhen права write на `avramch/precoro-e2e-playwright` (пуш гілок, PR); адмін лише `avramch`. Actions увімкнені, захисту `develop` нема. Чи пушить Claude сам: `<так | лише локальний коміт>`.
+- GitHub-акаунт для TAF і вікі: `yliashenko-sdet` (робочий); особистий `yliashenko` для TAF більше не використовується. Доступ `yliashenko-sdet` до `avramch/precoro-e2e-playwright` запитано 2026-09-24.
+- Push і PR: права write на `avramch/precoro-e2e-playwright` (пуш гілок, PR); адмін лише `avramch`. Actions увімкнені, захисту `develop` нема. Чи пушить Claude сам: `<так | лише локальний коміт>`.
 - Ревʼю: спершу CodeRabbit у репозиторії, валідні коментарі обов'язково фіксити; далі людина: Олександр для команди документів, решта інфра-AQA.
 - Зміни в Jenkinsfile робить інфра-AQA, але потрібен апрув від девів або Олександра.
 

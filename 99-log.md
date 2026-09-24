@@ -97,3 +97,4 @@ _width: wide
 - 2026-09-24. Нотатка `06-playbooks/claude-setup.md`: маршрути конфігурації і пам'яті Claude (дві схеми mermaid, таблиця «де що живе», закрите/відкрите, ручні кроки, перевірка, відкат); сторінка зі схемами як артефакт. Маршрутизація розширення перевірена через /status і /memory; знайдено, що робочі сесії йдуть на Opus 4.8 через ANTHROPIC_MODEL у налаштуваннях VS Code.
 - 2026-09-24. Модель робочих сесій: `claude-opus-5-5` у `~/.claude-precoro/settings.json` (перебиває `ANTHROPIC_MODEL` з VS Code).
 - 2026-09-24. Виправлено: змінна ANTHROPIC_MODEL має вищий пріоритет за model у settings.json; ANTHROPIC_MODEL=claude-opus-4-8 прибрано з налаштувань VS Code.
+- 2026-09-24. Вікі переїхала на робочий акаунт: `yliashenko-sdet/precoro-taf-wiki`, історія без `08-agent` (вирізано з усіх комітів); старий репо лишився як remote `personal`. Git-автор у вікі і в репо TAF: робоча пошта. Для TAF лише `yliashenko-sdet`, доступ запитано.
