@@ -7,7 +7,7 @@ _organized: true
 
 ## Труба 1. Контрольні показники (джерело: код)
 
-`scripts/debt.ts` у репо TAF рахує патерни з `05-roadmap/metrics.md` у файлі або в репо; одиниця: входження. Цифри не зберігаються: значення на будь-якому коміті дає `npm run debt` на цьому коміті.
+`scripts/debt.js` у репо TAF рахує патерни з `05-roadmap/metrics.md` у файлі або в репо; одиниця: входження. Цифри не зберігаються: значення на будь-якому коміті дає `npm run debt` на цьому коміті.
 
 Гейт `npm run debt:check` у GitHub Actions: у кожному зміненому в PR файлі патернів з переліку гейта не більше, ніж у `develop`. Правило і перелік: `05-roadmap/tasks/T0-13.md`.
 
@@ -82,6 +82,6 @@ testInfo.annotations.push({ type: 'load', description: JSON.stringify(counters) 
 
 ## Розподіл
 
-- TAF: `debt.ts`, `run-metrics.ts`, `weekly-report.ts`, CI-гейт.
+- TAF: `debt.js`, `run-metrics.ts`, `weekly-report.ts`, CI-гейт.
 - Інфра-AQA: дашборд читає `metrics/*.jsonl` замість консольного логу; `parse-test-log.js` видаляється.
 
