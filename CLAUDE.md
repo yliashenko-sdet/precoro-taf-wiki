@@ -61,6 +61,8 @@
 cd ~/Work/src/precoro-e2e-playwright && CLAUDE_CONFIG_DIR=~/.claude-precoro claude
 ```
 
+Як це влаштовано, де ламається і як відкотити: `06-playbooks/claude-setup.md`.
+
 Не запускати з теки вікі: пам'ять прив'язана до теки старту. Перевірка після старту: `/status` показує робочу пошту і теку репо TAF; "Open auto-memory folder" у `/memory` веде в `~/.claude-precoro/projects/...`.
 
 ## Стартовий промпт для нової сесії
