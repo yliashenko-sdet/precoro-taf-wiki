@@ -100,3 +100,4 @@ _width: wide
 - 2026-09-24. Вікі переїхала на робочий акаунт: `yliashenko-sdet/precoro-taf-wiki`, історія без `08-agent` (вирізано з усіх комітів); старий репо лишився як remote `personal`. Git-автор у вікі і в репо TAF: робоча пошта. Для TAF лише `yliashenko-sdet`, доступ запитано.
 - 2026-09-24. Пуш розділено за каталогом конфігурації: робочі сесії через `GH_CONFIG_DIR=~/.config/gh-precoro` пушать як `yliashenko-sdet`, решта машини (Claude Desktop) як `yliashenko`; схема в `06-playbooks/claude-setup.md`.
 - 2026-09-24. Базова гілка `develop` підтверджена (бранчуємось і мерджимо); ранні правки T0-01 відкочено, задача стартує з чистого аркуша.
+- 2026-09-24. Конектори в робочій сесії перевірено читанням: Asana (проєкт Automated testing), Slack (`#jenkins-failed-builds`), Sentry, Notion, Calendar, Gmail; усі на робочому акаунті. Наступна сесія: контракт T0-01 від `develop`.
