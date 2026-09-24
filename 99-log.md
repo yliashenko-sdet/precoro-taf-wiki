@@ -99,3 +99,4 @@ _width: wide
 - 2026-09-24. Виправлено: змінна ANTHROPIC_MODEL має вищий пріоритет за model у settings.json; ANTHROPIC_MODEL=claude-opus-4-8 прибрано з налаштувань VS Code.
 - 2026-09-24. Вікі переїхала на робочий акаунт: `yliashenko-sdet/precoro-taf-wiki`, історія без `08-agent` (вирізано з усіх комітів); старий репо лишився як remote `personal`. Git-автор у вікі і в репо TAF: робоча пошта. Для TAF лише `yliashenko-sdet`, доступ запитано.
 - 2026-09-24. Пуш розділено за каталогом конфігурації: робочі сесії через `GH_CONFIG_DIR=~/.config/gh-precoro` пушать як `yliashenko-sdet`, решта машини (Claude Desktop) як `yliashenko`; схема в `06-playbooks/claude-setup.md`.
+- 2026-09-24. Базова гілка `develop` підтверджена (бранчуємось і мерджимо); ранні правки T0-01 відкочено, задача стартує з чистого аркуша.
