@@ -33,6 +33,7 @@ _width: wide
 - Локальна гілка `taf/stage-1` від `develop` (`ad66840`), не запушена:
   - T0-01 (`393bfc21`): `tsc` 6 → 0, `.github/workflows/quality.yml` з `typecheck` і path-scope.
   - T0-02 (`e9482de4`): lint 81 → 0 помилок, warnings 57 → 16, lint у гейті.
+  - T0-13 (`aed5042e`): `scripts/debt.js`, `npm run debt` / `debt:check`; гейт: у зміненому файлі патернів з переліку не більше, ніж у `develop` (на старті `waitForTimeout`, `.catch(() => {})`).
   - Не перевірено на GitHub, бо нема доступу до репо. Зміни поведінки, що чекають прогону: `await waitForPageLoad()` у `test_reports.spec.ts`.
 - Знахідки поза скоупом: `01-context/findings.md` (F-01 гонка split-ів у `po_strategy.ts`, I-01 мапа статусів), розбір перед стартом етапу.
 
