@@ -28,7 +28,7 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-1
 | Показник | Аудит 15.09 | Ціль | Спосіб |
 | --- | --- | --- | --- |
 | `allure.` у `src/ui` | ~12 000 | 0 | codemod |
-| `expect(await` у спеках | 511 | 0 | codemod |
+| `expect` над значенням зі сторінки чи БД у спеках (T1-12; аудит рахував регуляркою `expect(await` по всьому `src/`; на старті етапу 1 `npm run debt` дає 562, після T1-12 локально 3) | 511 | 0 | codemod + local run |
 | Value-assertion на локаторах | ~5 000 | ≤ 500 | codemod + local run |
 | `waitForTimeout` + `setTimeout` sleeps | 121 | 0 | instrument + nightly run |
 | Літеральні `timeout: N` у `src/ui/web` | 488 (303 у pages) | 0 літералів; потрібні таймаути через іменовані константи з множником середовища | codemod + local run |
