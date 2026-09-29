@@ -21,7 +21,7 @@ T1-13, крок 3. Біль P8: за Asana-задачами Head of QA ([При�
 | --- | --- |
 | тест падає, літерал ≤ 15 s | 323 |
 | тест падає, літерал > 15 s (переважно опитування фонового оновлення ціни) | 176 |
-| таймаут це відповідь "ні": `.catch(...)` або `try {}` навколо | 284 |
+| таймаут це відповідь "ні": `.catch(...)` або `try {} catch` навколо | 284 (у codemod 281: `try {} finally` нічого не ловить) |
 
 ## Рішення
 Конвенція за скілом проєкту `playwright-best-practices`: таймаути в конфігу і помірні (`core/configuration.md`, "Timeout Selection": `expect.timeout` 5–10 s, `actionTimeout` 10–15 s, `navigationTimeout` 10–30 s); повільніше середовище вирішується в конфігу (`core/configuration.md`, "Tests Pass Locally But Timeout in CI"); таймаут на окремому виклику лише для відомо повільної операції і лише довший (`debugging/debugging.md`, "Timeout Issues"); великі глобальні таймаути це антипатерн, бо маскують flaky (`core/configuration.md`, "Anti-Patterns").
