@@ -30,7 +30,7 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-1
 | `allure.` у `src/ui` | ~12 000 | 0 | codemod |
 | `expect` над значенням зі сторінки чи БД у спеках (T1-12; аудит рахував регуляркою `expect(await` по всьому `src/`; на старті етапу 1 `npm run debt` дає 562, після T1-12 локально 3) | 511 | 0 | codemod + local run |
 | Value-assertion на локаторах | ~5 000 | ≤ 500 | codemod + local run |
-| `waitForTimeout` + `setTimeout` sleeps | 121 | 0 | instrument + nightly run |
+| `waitForTimeout` + `setTimeout` sleeps (з 2026-09-29 у `debt.js` через AST: sleeps, цикли зі sleep, `networkidle`; на старті T1-13 кроку 2: 90 / 19 / 11, після кроку 2 локально 0 / 0 / 0, винятки з коментарем-причиною не рахуються) | 121 | 0 | instrument + nightly run |
 | Літеральні `timeout: N` у `src/ui/web` | 488 (303 у pages) | 0 літералів; потрібні таймаути через іменовані константи з множником середовища | codemod + local run |
 | `.catch(() => false)` поза предикатами | ~211 | 0 | instrument + nightly run |
 | `.catch(() => {})` | 131 | 0 | instrument + nightly run |
