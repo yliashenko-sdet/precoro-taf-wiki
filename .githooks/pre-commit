@@ -17,7 +17,8 @@ patterns=(
   'ondigitalocean\.com'                                    # managed DB / infra hosts
   '\b(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])){3}\b'  # IPv4
 )
-allow='127\.0\.0\.1|0\.0\.0\.0|z\.string\(\)|<[^>]*>'
+# 172.64.66.1: внутрішній шлюз Docker Desktop на Mac (однаковий на всіх машинах, не сервер).
+allow='127\.0\.0\.1|0\.0\.0\.0|172\.64\.66\.1|z\.string\(\)|<[^>]*>'
 
 added=$(git diff --cached --no-color -U0 --diff-filter=ACM | grep -E '^\+' | grep -vE '^\+\+\+' || true)
 [ -z "$added" ] && exit 0
