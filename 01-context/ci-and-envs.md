@@ -25,12 +25,12 @@ Jenkinsfile не в репозиторії TAF, а в репозиторії п�
 | Прогін | Де | Склад |
 | --- | --- | --- |
 | Smoke | гілка | `@smoke` + тести модуля; `@not_for_isolated_env` не виключається |
-| Full run | гілка, середовище без мікросервісів | без `@not_for_isolated_env` і решти списку `--grep-invert` |
+| Full run | гілка, середовище без мікросервісів; за `-full-run` у назві PR | без `@not_for_isolated_env` і решти списку `--grep-invert` |
 | Precorino run | Precorino, вночі; середовище підняте повністю, з мікросервісами | усі тести, включно з `@not_for_isolated_env` |
 
 - **Nightly / dev**: `RUN_ENV=dev`, `configuration.ini` + `.env.dev`, всі тести. Linux-агент: 4 воркери, 3 ретраї. Windows-агент: 9 воркерів, 1 ретрай, відео на падінні.
 - **Гілковий smoke**: Jenkins розгортає гілку на IP, експортує лише `LOCAL_SERVER_URL`, запускає `--grep "@smoke|@module"`. `grepInvert` для smoke-only закоментовано 2026-06-17, тому `@module` реально біжить.
-- **Повний гілковий**: те саме плюс `ASANA_RUN_ALL_AUTOTESTS=true` з поля задачі в Asana → `configuration_full_branch_run.ini`.
+- **Повний гілковий (full run)**: вмикається позначкою `-full-run` у назві PR (`Jenkinsfile` продукту на `Develop`, рядки 165 і 519); після зеленого смоуку йде `--grep-invert` списку повного прогону. Падіння full run білд не валить: статус `full-run` у Bitbucket FAILED, пост у канал, PR повертається в Draft (`01-context/infra/jenkins.md`). `ASANA_RUN_ALL_AUTOTESTS` і `configuration_full_branch_run.ini` у Jenkinsfile більше нема.
 - `.env.*` на Jenkins читаються з `/home/jenkins/shared_dotenv`.
 - Результати: консольний лог + Allure JSON; `scripts/parse-test-log.js` парсить лог у HTML; саморобний дашборд показує flaky, wall-clock, machine-time по проектах.
 

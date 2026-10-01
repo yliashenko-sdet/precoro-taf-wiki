@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Блокує коміт, якщо в доданих рядках є секрети або внутрішні адреси інфраструктури.
+# Вікі — база знань про TAF і Precoro, але не сховище креденшелів: змінні згадуються лише за назвою.
+# Увімкнення в клоні: git config core.hooksPath .githooks
+set -euo pipefail
+
+patterns=(
+  'dop_v1_[a-f0-9]{20,}'                                   # DigitalOcean token
+  'gh[pousr]_[A-Za-z0-9]{20,}'                             # GitHub token
+  'xox[abposr]-[A-Za-z0-9-]{10,}'                          # Slack token
+  'hooks\.slack\.com/services/'                            # Slack webhook
+  'AKIA[0-9A-Z]{16}'                                       # AWS / S3 access key
+  '-----BEGIN [A-Z ]*PRIVATE KEY'                          # private key
+  'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}'              # JWT
+  '(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|CLIENT_ID)[A-Z_]*[[:space:]]*[=:][[:space:]]*[^[:space:]<>`"|(){}]{6,}'  # VAR=value
+  '://[^/[:space:]:@]+:[^/[:space:]@]+@'                   # credentials in URL
+  'ondigitalocean\.com'                                    # managed DB / infra hosts
+  '\b(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])){3}\b'  # IPv4
+)
+allow='127\.0\.0\.1|0\.0\.0\.0|z\.string\(\)|<[^>]*>'
+
+added=$(git diff --cached --no-color -U0 --diff-filter=ACM | grep -E '^\+' | grep -vE '^\+\+\+' || true)
+[ -z "$added" ] && exit 0
+
+hits=""
+for p in "${patterns[@]}"; do
+  m=$(printf '%s\n' "$added" | grep -oE -- "$p" | grep -vE -- "^($allow)$" || true)
+  [ -n "$m" ] && hits+="$m"$'\n'
+done
+
+if [ -n "$hits" ]; then
+  echo "pre-commit: схоже на секрет або внутрішню адресу в доданих рядках:" >&2
+  printf '%s' "$hits" | sort -u | sed 's/^/  /' >&2
+  echo "Заміни значення назвою змінної або описом. Якщо це хибна тривога — поправ allow-список у .githooks/pre-commit." >&2
+  exit 1
+fi
