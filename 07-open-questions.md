@@ -21,6 +21,11 @@ _width: wide
 | 19 | Яку різницю конфігурації нод на гілках знайшов Олександр і чому її не змінили? | Олександр, інфра-AQA | P4, T0-19 | відкрито |
 | 20 | Як Jenkins перетворює назву модуля з Asana на grep? Де живе ця мапа і хто володіє значеннями поля в Asana? Потрібен Jenkinsfile: він же відповість про склад стадій, пост бота, артефакти між білдами, умову METRICS, крок seed | інфра-AQA, Head of QA | T1-15, T0-06, T0-17, T0-23, T4-03 | частково: список із 112 модулів отримано (`01-context/modules.md`); механізм мапи ще ні |
 | 21 | Що з тестуванням мікросервісів: де вони тестуються зараз і чи входить це в горизонт до Нового року? | Head of QA | P11 | відкрито |
+| 29 | Чому в e2e-конфігу продукту нема `TEST_API_ENABLED`, `ELASTICA_ENABLE_LISTENERS`, `FRANKENPHP_NUM_THREADS`, пам'яті ES 1 GB і теки `web/uploads/media`? Звідки вони беруться у твоєму запуску (Infisical `development-docker` з `infisical login`?) | інфра-AQA | локальні прогони (`06-playbooks/local-run.md`) | відкрито; Yevhen чекає пояснення, правки лишаються незакоміченими |
+| 30 | Чи задається `QASE_MODE=testops` на Jenkins (гілки, нічний)? У жодному Jenkinsfile його нема (`01-context/infra/jenkins.md`) | інфра-AQA | T0-10, звіти в Qase | відкрито |
+| 31 | Нічна джоба: чи має Sentry-гейт і чи свідомо ганяє тести, які Qase scope позначає `@unstable` (30.09: 14 падінь `test_repeat`, QaseID 6004)? | інфра-AQA | склад нічного прогону, T0-16 | відкрито |
+| 32 | Чи є `exports` і `mail-templates` на гілкових серверах (пайплайн `Develop`)? | інфра-AQA | атлас, `01-context/infra/product-stack.md` | відкрито |
+| 33 | Оновити `docs/e2e-local-guide.md`: `make docker-secrets-sync` не існує з 20.08; для запуску з хоста потрібні Node 22, збірка фронту на хості, адреса хоста Docker Desktop у `TRUSTED_IPS`, `NODE_EXTRA_CA_CERTS` | інфра-AQA | гайд продукту | відкрито |
 
 | 25 | Зробити перевірку якості обов'язковою для мержу в `develop` (branch protection). Actions уже увімкнені (Copilot review біжить), workflow можна додати з правами write; адмін репо один: `avramch` (Alexander, імовірно Авраменко з розробки) | власник репо, після перших результатів гейта | T0-01, T0-02, T0-13 | уточнено 2026-09-22 |
 
