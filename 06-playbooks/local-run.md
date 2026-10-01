@@ -42,14 +42,14 @@ Test Explorer у VS Code показує лише запуски, зроблен�
 
 ## Стек продукту
 
-Гайд: `docs/e2e-local-guide.md` у репо продукту. Розгортання з гілки `feature/brynza/docker-jenkinsfile` (інфра-AQA) плюс локальна `taf/base` з правками, без яких тести з хоста не працювали:
+Гайд: `docs/e2e-local-guide.md` у репо продукту. Розгортання з гілки `feature/brynza/docker-jenkinsfile` (інфра-AQA) плюс правки, без яких тести з хоста не працювали. Правки не комітяться (рішення Yevhen, 2026-10-01: пояснення від інфра-AQA, чому цих змінних нема в проєкті, буде пізніше); вони лежать незакоміченими змінами в робочому дереві `~/Work/src/precoro` на `taf/base` і потрібні лише для запуску тестів з хоста, не в Docker:
 
-| Коміт (`taf/base`, precoro) | Що |
+| Файл (незакомічено) | Що |
 | --- | --- |
-| `eae8a2ffa44` | `TEST_API_ENABLED=1`: без нього кожен API-виклик TAF з `X-AUTO-TESTS` редиректиться на `/login` |
-| `e76f056dd07` | `ELASTICA_ENABLE_LISTENERS=true`: інакше нове, що створює тест, не потрапляє в Elasticsearch і списки та пошук його не бачать |
-| `2662b53ed51` | Elasticsearch 1 GB (з 400 MB падає на `es-sync` дампа 2026-09-22); `web/uploads/media` на `make up` (без неї падає кожен експорт) |
-| `4515eadc139` | `FRANKENPHP_NUM_THREADS=20` для 8 воркерів (типово 8 потоків) |
+| `docker/e2e/phpfpm/.env.docker.e2e` | `TEST_API_ENABLED=1`: без нього кожен API-виклик TAF з `X-AUTO-TESTS` редиректиться на `/login` |
+| `docker/e2e/phpfpm/.env.docker.e2e` | `ELASTICA_ENABLE_LISTENERS=true`: інакше нове, що створює тест, не потрапляє в Elasticsearch і списки та пошук його не бачать |
+| `docker-compose-e2e.yml`, `Makefile.e2e` | Elasticsearch 1 GB (з 400 MB падає на `es-sync` дампа 2026-09-22); `web/uploads/media` на `make up` (без неї падає кожен експорт) |
+| `docker/e2e/phpfpm/.env.docker.e2e` | `FRANKENPHP_NUM_THREADS=20` для 8 воркерів (типово 8 потоків) |
 
 Імовірно, у розгортанні інфра-AQA частину цього дає Infisical: контейнер застосунку стартує з секретами `development-docker`, якщо на хості є `infisical login`. Без нього контейнер у режимі `DEGRADED`. Не підтверджено.
 
