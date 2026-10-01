@@ -47,7 +47,7 @@
 ## Де що ще лежить
 
 - Первинні джерела, записи і транскрипти розмов з Максимом (15.09) і Head of QA (16.09): `/Users/yevhenlyashenko/Work/Precoro/sources/` (опис у `README.md` там).
-- Артефакти прогонів і експорти: `/Users/yevhenlyashenko/Work/Precoro/` (нічний прогін 16.09 у `jenkins-run-16.09.26/`, експорти Slack, список ендпоінтів).
+- Артефакти прогонів і експорти: `/Users/yevhenlyashenko/Work/Precoro/` (нічний прогін 30.09 у `jenkins-run-01.10.26/`, попередній 16.09 у `jenkins-run-16.09.26/`, локальні прогони в `local-runs/`, експорти Slack, список ендпоінтів).
 - Специфікація OpenAPI: `01-context/audit/precoro-openapi-2026-09-22.json`.
 - Скрипти аналізу: `06-playbooks/scripts/` (показники боргу, розбір Allure, пакування воркерів, покриття Swagger, пости Slack).
 - Довідник **Precoro × TAF Atlas** (https://claude.ai/artifact/Dv299XwUtEBv8T72M1Gjau), сирець `/Users/yevhenlyashenko/Work/Precoro/artifacts/precoro-taf-atlas.html`: інтерактивна карта TAF + Precoro (середовища, прогони, теги, Jenkins, дані). Тримати актуальним: після будь-якої зміни, що міняє факт на сторінці, оновити в тій самій сесії (прочитати артефакт за url, правити сирець, публікувати з тим самим url).
