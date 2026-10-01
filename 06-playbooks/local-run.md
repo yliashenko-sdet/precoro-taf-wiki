@@ -12,7 +12,7 @@ npm run test:local-smoke          # смоук як на гілці (--grep @smo
 npm run test:local-full -- --workers=8 --project=po_company   # додаткові аргументи Playwright
 ```
 
-Скрипт `scripts/run-local.sh` (TAF, коміт `5e2c1994` на `taf/base`) задає те, що запуск через Docker отримує сам:
+Скрипт `scripts/run-local.sh` і два записи в `package.json` — незакомічені зміни в робочому дереві TAF (рішення Yevhen 2026-10-01: у TAF без його «ок» не комітимо). Копія патчем: `~/Work/Precoro/local-runs/run-local-scripts.patch`; на іншу гілку переносити `git apply <patch>`. Скрипт задає те, що запуск через Docker отримує сам:
 
 | Що | Навіщо |
 | --- | --- |
@@ -20,6 +20,8 @@ npm run test:local-full -- --workers=8 --project=po_company   # додатков
 | `CI=1` | headless, 3 ретраї, як у Jenkins |
 | `QASE_SCOPE_URL` | Qase додає `@smoke` / `@unstable` за QaseID під час збору тестів; без цього 281 тест, позначений у Qase як `@unstable`, біжить як звичайний |
 | `--grep-invert` повного прогону | той самий список, що `e2e-full` у `docker-compose.yml` TAF і повний прогін у `Jenkinsfile` продукту, разом з `@not_for_isolated_env` |
+| `NODE_EXTRA_CA_CERTS` | довіра до самопідписаного сертифіката стеку для тестів з власним `browser.newContext()` |
+| `git clean -fqX -- src/downloads` | прибирає завантаження попереднього прогону (F-11); тека схована від git локально через `.git/info/exclude` |
 
 `GREP_INVERT` як змінну середовища читає лише `docker-entrypoint.sh` у контейнері; Playwright напряму її не бачить.
 
