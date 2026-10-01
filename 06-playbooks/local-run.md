@@ -23,6 +23,23 @@ npm run test:local-full -- --workers=8 --project=po_company   # додатков
 
 `GREP_INVERT` як змінну середовища читає лише `docker-entrypoint.sh` у контейнері; Playwright напряму її не бачить.
 
+## Як стежити за прогоном
+
+Довгий прогін запускати з репортерами `list` (живий лог), `json` (для порівняння прогонів) і `html` (звіт), лог і звіт складати поза репозиторієм:
+
+```bash
+D=~/Work/Precoro/local-runs/<дата>
+PLAYWRIGHT_JSON_OUTPUT_NAME=$D/run-1.json PLAYWRIGHT_HTML_OUTPUT_DIR=$D/report-1 PLAYWRIGHT_HTML_OPEN=never \
+  npm run -s test:local-full -- --reporter=list,json,html > $D/run-1.log 2>&1
+```
+
+| Що | Команда |
+| --- | --- |
+| Живий перебіг: ✓ пройшов, ✘ впав, число це номер тесту в прогоні | `tail -f $D/run-1.log \| grep --line-buffered -E "✓\|✘"` |
+| Звіт після прогону: фільтри, помилки, скріншоти | `npx playwright show-report $D/report-1` |
+
+Test Explorer у VS Code показує лише запуски, зроблені з нього самого; прогін з термінала там не видно. Щоб запускати окремі тести з Explorer проти локального стеку, у `settings.json` робочої теки: `"playwright.env": { "RUN_ENV": "docker_host", "QASE_SCOPE_URL": "https://senana.precorino.com/qase/scope" }`; виключення тегів у фільтрі Explorer: `!@not_for_isolated_env`. Для повного прогону Explorer не підходить: із закриттям VS Code прогін зупиняється.
+
 ## Стек продукту
 
 Гайд: `docs/e2e-local-guide.md` у репо продукту. Розгортання з гілки `feature/brynza/docker-jenkinsfile` (інфра-AQA) плюс локальна `taf/base` з правками, без яких тести з хоста не працювали:
