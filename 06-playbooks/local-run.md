@@ -78,6 +78,16 @@ Test Explorer у VS Code показує лише запуски, зроблен�
 
 **База «до» для гілок задач: `taf/base` на `develop` `6a5a219f`**, 1 109 тестів, 0 падінь у двох прогонах, шум 1–7 flaky. Перед прогонами додано довіру до сертифіката стеку і адресу хоста Docker Desktop у `TRUSTED_IPS` (2FA). Flaky прогону 2: три поспіль о 18:09–18:10 збіглися з відключенням Mac від мережі (`net::ERR_NETWORK_CHANGED`); `Revise receipt with warehouse` (`items_company`) flaky в обох прогонах і на старій базі — кандидат у справжній flaky. Усі flaky уночі 30.09 проходять. Артефакти: `~/Work/Precoro/local-runs/2026-10-01-develop/` (`before-*.json`, `report-*`); зупинені спроби в `attempt-1/`, `attempt-2/`.
 
+## Прогони «після»
+
+Порівнюються з базою «до» на `taf/base` (`develop` `6a5a219f`): 0 падінь у двох прогонах, 1–7 flaky.
+
+| Дата | Гілка | Пройшли | Впали | Flaky | Skipped | Тривалість | Висновок |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-01 22:52 – 00:04 | `feature/liashenko/quality-gate` (`de9243b0`: T0-01, T0-02, T0-13 + мерж `develop` `6a5a219f`) | 1 031 | 14 | 2 | 62 | 1.2h | нових падінь від гілки нема: усі 14 це `budget_limit_company`, тести валют бюджету, що почали падати о 00:00 за Києвом (F-12); ті самі 14 окремо о 00:05 падають однаково на `develop` і на гілці. Flaky: `Revise receipt with warehouse` (як «до»), `Create/edit item, verify is manual update [Expense]` (новий, пройшов на ретраї) |
+
+Прогін, що перетинає північ за Києвом, ламає тести з валютою і бюджетом (F-12): стартувати так, щоб закінчився до 00:00. Артефакти: `~/Work/Precoro/local-runs/2026-10-01-stage-1/` (`after-1.json`, `report-1`, `check-base.json`, `check-branch.json`).
+
 ## Стан після стабілізації (2026-10-01)
 
 Контрольний прогін 115 тестів, що впали в першому: з 57 залишкових падінь 51 мали `@not_for_isolated_env`, 4 позначені Qase як `@unstable`, 2 без пояснення. Джерело: `~/Work/Precoro/local-runs/2026-09-30/verify-1.json`, `classify.js`.
