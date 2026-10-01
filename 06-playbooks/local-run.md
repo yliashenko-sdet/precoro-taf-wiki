@@ -65,10 +65,14 @@ Test Explorer у VS Code показує лише запуски, зроблен�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-01 | `taf/base-2026-09-30` (develop 28.09 + гілка інфра-AQA) | 1 | 986 | 8 | 3 | 62 | 1.2h |
 | 2026-10-01 | те саме | 2 | 987 | 5 | 5 | 62 | 1.3h |
+| 2026-10-01 | `taf/base` = `develop` `6a5a219f` + скрипти (`dadf3c72`) | 1 | 1 046 | 0 | 1 | 62 | 1.3h |
+| 2026-10-01 | те саме | 2 | 1 040 | 0 | 7 | 62 | 1.2h |
 
 1 059 тестів, 8 воркерів, `npm run test:local-full`, свіжий `prepare-db` перед першим прогоном. Стабільно в обох: 5 падінь `approval_regression` (`test_approval.spec.ts`), уночі 30.09 проходять. Причина — середовище, не дані і не тести: користувачі `approval_regression`, `import_documents_company`, `custom_numbering_company` і `close_documents` мають 2FA (так само на Precorino і на Jenkins), а продукт пропускає 2FA лише для IP з `TRUSTED_IPS`. Docker Desktop на Mac передає запити з хоста з `172.64.66.1`, поза діапазонами в e2e-конфігу, тож логін зупиняється на «Authentication code». Локальна незакомічена правка додає цю адресу в `TRUSTED_IPS` (`docker/e2e/phpfpm/.env.docker.e2e`); перевірено: `approval_regression` проходить. Гіпотезу про коміт `dc8d56b1` прогін на `develop` спростував. Решта (8 тестів) не повторюється між прогонами: шум. Усі локальні падіння й flaky уночі проходять (`01-context/audit/nightly-run-2026-09-30.md`). Артефакти: `~/Work/Precoro/local-runs/2026-10-01/` (`before-*.json`, `report-*`).
 
 Далі «до» на `taf/base` = `origin/develop` (`6a5a219f`) + скрипти: 1 109 тестів, `~/Work/Precoro/local-runs/2026-10-01-develop/`. Перша спроба зупинена: нові тести з `develop` (`test_reject`, `test_revise`, `test_send_for_revision`) створюють власний `browser.newContext()` без налаштувань конфігу, і їхні API-запити падають на самопідписаному сертифікаті локального стеку (302 невдалі спроби в `po_from_pr_company`). `scripts/run-local.sh` тепер задає `NODE_EXTRA_CA_CERTS` на сертифікат стеку (`../precoro/docker/local/caddy/dev.crt`, перевизначається `LOCAL_STACK_CA`); на Jenkins і Precorino сертифікати справжні, проблеми нема.
+
+**База «до» для гілок задач: `taf/base` на `develop` `6a5a219f`**, 1 109 тестів, 0 падінь у двох прогонах, шум 1–7 flaky. Перед прогонами додано довіру до сертифіката стеку і адресу хоста Docker Desktop у `TRUSTED_IPS` (2FA). Flaky прогону 2: три поспіль о 18:09–18:10 збіглися з відключенням Mac від мережі (`net::ERR_NETWORK_CHANGED`); `Revise receipt with warehouse` (`items_company`) flaky в обох прогонах і на старій базі — кандидат у справжній flaky. Усі flaky уночі 30.09 проходять. Артефакти: `~/Work/Precoro/local-runs/2026-10-01-develop/` (`before-*.json`, `report-*`); зупинені спроби в `attempt-1/`, `attempt-2/`.
 
 ## Стан після стабілізації (2026-10-01)
 
