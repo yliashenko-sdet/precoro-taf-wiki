@@ -31,12 +31,12 @@ _width: wide
 
 ## In Progress
 
-- Локальна гілка `taf/stage-1` від `develop` (`ad66840`), не запушена:
+- Локальна гілка `feature/liashenko/quality-gate` від `develop` (`ad66840`), не запушена:
   - T0-01 (`393bfc21`): `tsc` 6 → 0, `.github/workflows/quality.yml` з `typecheck` і path-scope.
   - T0-02 (`e9482de4`): lint 81 → 0 помилок, warnings 57 → 16, lint у гейті.
   - T0-13 (`aed5042e`): `scripts/debt.js`, `npm run debt` / `debt:check`; гейт: у зміненому файлі патернів з переліку не більше, ніж у `develop` (на старті `waitForTimeout`, `.catch(() => {})`).
   - Не перевірено на GitHub, бо нема доступу до репо. Зміни поведінки, що чекають прогону: `await waitForPageLoad()` у `test_reports.spec.ts`.
-- T1-12 (`taf2/T1-12-value-assertions` від `taf/stage-1`, 13 комітів до `59596e1c`, не запушена): код готовий, показник 562 → 3; лишились F-02 і `isSubstituteOptionPresent` (2), обидва чекають середовища; що перевірити на прогоні, у картці, розділ "Де зупинились". Доробка T0-13 (регулярки з переносами рядків) у `taf2/T0-13-line-breaks` (`c1c6c84e`).
+- T1-12 (`taf2/T1-12-value-assertions` від `feature/liashenko/quality-gate`, 13 комітів до `59596e1c`, не запушена): код готовий, показник 562 → 3; лишились F-02 і `isSubstituteOptionPresent` (2), обидва чекають середовища; що перевірити на прогоні, у картці, розділ "Де зупинились". Доробка T0-13 (регулярки з переносами рядків) у `taf2/T0-13-line-breaks` (`c1c6c84e`).
 - T1-13 (`taf2/T1-13-sleeps-timeouts` від `taf2/T1-12-value-assertions`, мержиться після T1-12, 11 комітів до `d5a43cbb`, не запушено): крок 1 (`pollUntil` 208 → 0, `getItemPrice`) і крок 2 (sleeps 90 → 0, цикли зі sleep 19 → 0, `networkidle` 11 → 0, винятки з коментарем) готові, статичні перевірки зелені, прогону не було. Крок 3 зроблено 2026-09-29 (3.1–3.3b, до `7a6d4d51`): літералів таймаутів 895 → 29 під гейтом, решта 29 перевірки наявності в T2-02; чекає перегляду Yevhen. T1-29 (зниження конфігу після виміру) у беклозі. Що перевірити на прогоні, у картці, розділ "Де зупинились".
 - Перевірка T1-12 і T1-13 прогоном: база «до» готова (див. Done 01.10). Гілки задач ще стоять на старій базі (`develop` від 28.09, резервна гілка `taf/base-2026-09-30`), їх треба звести з новою `taf/base`.
 - Знахідки поза скоупом: `01-context/findings.md` (F-01 split без `await` у `po_strategy.ts`, I-01 мапа статусів, F-02, F-03 випадкові ціни, що можуть збігтись, I-02 мертві перевірки на `null`; F-04 виправлено в T1-13), розбір перед стартом етапу.
@@ -51,8 +51,8 @@ _width: wide
 
 Звести гілки задач з новою базою і прогнати «після» (кожна гілка — окремий підхід за протоколом, у діалозі цієї задачі):
 
-1. `taf/base` (TAF) → `taf/stage-1` (T0-01, T0-02, T0-13): мерджем, не rebase, щоб зберегти хеші з карток; конфлікти з `develop` розв'язати по файлу; `tsc`, lint, `npm run debt:check`.
-2. `taf/stage-1` → `taf2/T1-12-value-assertions`, далі T1-12 → `taf2/T1-13-sleeps-timeouts`; на кожному кроці ті самі статичні перевірки.
+1. `taf/base` (TAF) → `feature/liashenko/quality-gate` (T0-01, T0-02, T0-13): мерджем, не rebase, щоб зберегти хеші з карток; конфлікти з `develop` розв'язати по файлу; `tsc`, lint, `npm run debt:check`.
+2. `feature/liashenko/quality-gate` → `taf2/T1-12-value-assertions`, далі T1-12 → `taf2/T1-13-sleeps-timeouts`; на кожному кроці ті самі статичні перевірки.
 3. На кожній гілці: `make -f Makefile.e2e prepare-db` (репо продукту), `rm -rf .auth`, два прогони `npm run test:local-full -- --workers=8` з репортерами `list,json,html` у `~/Work/Precoro/local-runs/<дата>-<гілка>/` (шаблон: `local-runs/2026-10-01-develop/run-before.sh`).
 4. Порівняти з базою «до» (`local-runs/2026-10-01-develop/before-*.json`) скриптом `local-runs/2026-09-30/classify.js` і крос-табом за тестами: нові падіння відділити від flaky перезапуском; що перевірити в кожній задачі — у картці, розділ «Де зупинились».
 

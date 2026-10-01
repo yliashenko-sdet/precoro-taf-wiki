@@ -27,18 +27,20 @@ npm run test:local-full -- --workers=8 --project=po_company   # додатков
 
 ## Як стежити за прогоном
 
-Довгий прогін запускати з репортерами `list` (живий лог), `json` (для порівняння прогонів) і `html` (звіт), лог і звіт складати поза репозиторієм:
+Кожен прогін лежить у своїй теці поза репозиторієм: `~/Work/Precoro/local-runs/<дата>-<гілка>/`. У ній скрипт прогону (`run-before.sh` для бази, `run-after.sh` для гілки), `*.meta` (коміти TAF і продукту, час старту і кінця), живий лог `before-1.log` або `after-1.log`, результат для порівняння `*.json` і HTML-звіт `report-1/`.
 
-```bash
-D=~/Work/Precoro/local-runs/<дата>
-PLAYWRIGHT_JSON_OUTPUT_NAME=$D/run-1.json PLAYWRIGHT_HTML_OUTPUT_DIR=$D/report-1 PLAYWRIGHT_HTML_OPEN=never \
-  npm run -s test:local-full -- --reporter=list,json,html > $D/run-1.log 2>&1
-```
+Гілку задачі перевіряє **один** повний прогін на хості після свіжого `prepare-db` (рішення Yevhen 2026-10-01; два прогони були потрібні лише для бази, щоб переконатись у стабільності середовища). Нові падіння перезапускаються окремо, щоб відділити flaky.
+
+Приклад на прогоні гілки `feature/liashenko/quality-gate` 2026-10-01:
 
 | Що | Команда |
 | --- | --- |
-| Живий перебіг: ✓ пройшов, ✘ впав, число це номер тесту в прогоні | `tail -f $D/run-1.log \| grep --line-buffered -E "✓\|✘"` |
-| Звіт після прогону: фільтри, помилки, скріншоти | `npx playwright show-report $D/report-1` |
+| Живий перебіг: ✓ пройшов, ✘ впав, число це номер тесту в прогоні; `Ctrl+C` зупиняє лише перегляд | `tail -f ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log \| grep --line-buffered -E "✓\|✘"` |
+| Скільки пройшло і впало зараз | `grep -c "✓" ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log; grep -c "✘" ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log` |
+| Лише падіння | `grep "✘" ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log` |
+| Звіт після прогону: фільтри, помилки, скріншоти | `npx playwright show-report ~/Work/Precoro/local-runs/2026-10-01-stage-1/report-1` |
+
+Для іншого прогону замінити теку і назву логу. Сам прогін запускається з репортерами `list` (живий лог), `json` (порівняння) і `html` (звіт); шаблон команди в `run-before.sh` / `run-after.sh` будь-якого прогону.
 
 Test Explorer у VS Code показує лише запуски, зроблені з нього самого; прогін з термінала там не видно. Щоб запускати окремі тести з Explorer проти локального стеку, у `settings.json` робочої теки: `"playwright.env": { "RUN_ENV": "docker_host", "QASE_SCOPE_URL": "https://senana.precorino.com/qase/scope" }`; виключення тегів у фільтрі Explorer: `!@not_for_isolated_env`. Для повного прогону Explorer не підходить: із закриттям VS Code прогін зупиняється.
 
