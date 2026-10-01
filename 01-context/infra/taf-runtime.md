@@ -188,3 +188,8 @@ CLI `--grep` не замінює `grep` проекту, а накладаєть�
 | `docker-compose.yml:103`, `playwright.config.ts:96-98` | docker-дефолт 6 воркерів | 4 (`playwright.config.ts:100`, `run_env.ts:41`) |
 | `playwright.config.ts:93` | "Equivalent to pytest --reruns 1" | 0 / 1 / 3 залежно від режиму |
 | `01-context/ci-and-envs.md` | гілковий Jenkins експортує лише `LOCAL_SERVER_URL`; повний гілковий читає `configuration_full_branch_run.ini` | тепер `RUN_ENV=branch` + `APP_BASE_URL`; INI один (`run_env.ts:9`) |
+
+## Локальний стек: сертифікат і 2FA
+
+- `https://localhost` локального стеку має самопідписаний сертифікат. `ignoreHTTPSErrors` з конфігу діє лише на контексти, створені з нього; тест, що сам робить `browser.newContext()`, отримує `self-signed certificate` на API-запитах. `scripts/run-local.sh` задає `NODE_EXTRA_CA_CERTS` на `../precoro/docker/local/caddy/dev.crt` (змінна `LOCAL_STACK_CA`).
+- Швидкий логін у `globalSetup` відповідає `409 user_has_2fa` для користувачів з 2FA і переходить на UI-форму; TAF 2FA не підтримує, тож такі проєкти локально падають на сторінці «Authentication code». У seed 2026-09-22 це `approval_regression` і `import_documents_company`.

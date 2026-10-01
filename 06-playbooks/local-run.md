@@ -66,9 +66,9 @@ Test Explorer у VS Code показує лише запуски, зроблен�
 | 2026-10-01 | `taf/base-2026-09-30` (develop 28.09 + гілка інфра-AQA) | 1 | 986 | 8 | 3 | 62 | 1.2h |
 | 2026-10-01 | те саме | 2 | 987 | 5 | 5 | 62 | 1.3h |
 
-1 059 тестів, 8 воркерів, `npm run test:local-full`, свіжий `prepare-db` перед першим прогоном. Стабільно в обох: 5 падінь `approval_regression` (`test_approval.spec.ts`), уночі 30.09 проходять; вірогідна причина — фікстура `ui_basic_settings_fixtures`, виправлена в `develop` комітом `dc8d56b1`, якого в цій базі нема. Решта (8 тестів) не повторюється між прогонами: шум. Усі локальні падіння й flaky уночі проходять (`01-context/audit/nightly-run-2026-09-30.md`). Артефакти: `~/Work/Precoro/local-runs/2026-10-01/` (`before-*.json`, `report-*`).
+1 059 тестів, 8 воркерів, `npm run test:local-full`, свіжий `prepare-db` перед першим прогоном. Стабільно в обох: 5 падінь `approval_regression` (`test_approval.spec.ts`), уночі 30.09 проходять. Причина — дані seed: користувач `approval_regression` має 2FA (`409 user_has_2fa` у `globalSetup`), TAF 2FA не підтримує, тест зупиняється на сторінці «Authentication code»; на Precorino 2FA в нього нема. Те саме для `import_documents_company`. Гіпотезу про коміт `dc8d56b1` прогін на `develop` спростував. Решта (8 тестів) не повторюється між прогонами: шум. Усі локальні падіння й flaky уночі проходять (`01-context/audit/nightly-run-2026-09-30.md`). Артефакти: `~/Work/Precoro/local-runs/2026-10-01/` (`before-*.json`, `report-*`).
 
-Далі «до» на `taf/base` = `origin/develop` (`6a5a219f`) + скрипти (`056c127e`): 1 109 тестів, `~/Work/Precoro/local-runs/2026-10-01-develop/`.
+Далі «до» на `taf/base` = `origin/develop` (`6a5a219f`) + скрипти: 1 109 тестів, `~/Work/Precoro/local-runs/2026-10-01-develop/`. Перша спроба зупинена: нові тести з `develop` (`test_reject`, `test_revise`, `test_send_for_revision`) створюють власний `browser.newContext()` без налаштувань конфігу, і їхні API-запити падають на самопідписаному сертифікаті локального стеку (302 невдалі спроби в `po_from_pr_company`). `scripts/run-local.sh` тепер задає `NODE_EXTRA_CA_CERTS` на сертифікат стеку (`../precoro/docker/local/caddy/dev.crt`, перевизначається `LOCAL_STACK_CA`); на Jenkins і Precorino сертифікати справжні, проблеми нема.
 
 ## Стан після стабілізації (2026-10-01)
 
