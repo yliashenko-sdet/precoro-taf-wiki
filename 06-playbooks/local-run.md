@@ -7,7 +7,7 @@
 ```bash
 cd ~/Work/src/precoro-e2e-playwright
 rm -rf .auth                      # після кожного prepare-db
-npm run test:local-full           # повний прогін як у Jenkins (1 059 запусків на 2026-10-01)
+npm run test:local-full           # повний прогін як у Jenkins (1 109 запусків на `develop` 2026-10-01; 1 059 на базі від 28.09)
 npm run test:local-smoke          # смоук як на гілці (--grep @smoke, 312 запусків)
 npm run test:local-full -- --workers=8 --project=po_company   # додаткові аргументи Playwright
 ```
