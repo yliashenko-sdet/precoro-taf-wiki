@@ -67,7 +67,7 @@ Test Explorer у VS Code показує лише запуски, зроблен�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-01 | `taf/base-2026-09-30` (develop 28.09 + гілка інфра-AQA) | 1 | 986 | 8 | 3 | 62 | 1.2h |
 | 2026-10-01 | те саме | 2 | 987 | 5 | 5 | 62 | 1.3h |
-| 2026-10-01 | `taf/base` = `develop` `6a5a219f` + скрипти (`dadf3c72`) | 1 | 1 046 | 0 | 1 | 62 | 1.3h |
+| 2026-10-01 | `taf/base` = `develop` `6a5a219f` + незакомічені скрипти (`run-local-scripts.patch`) | 1 | 1 046 | 0 | 1 | 62 | 1.3h |
 | 2026-10-01 | те саме | 2 | 1 040 | 0 | 7 | 62 | 1.2h |
 
 1 059 тестів, 8 воркерів, `npm run test:local-full`, свіжий `prepare-db` перед першим прогоном. Стабільно в обох: 5 падінь `approval_regression` (`test_approval.spec.ts`), уночі 30.09 проходять. Причина — середовище, не дані і не тести: користувачі `approval_regression`, `import_documents_company`, `custom_numbering_company` і `close_documents` мають 2FA (так само на Precorino і на Jenkins), а продукт пропускає 2FA лише для IP з `TRUSTED_IPS`. Docker Desktop на Mac передає запити з хоста з `172.64.66.1`, поза діапазонами в e2e-конфігу, тож логін зупиняється на «Authentication code». Локальна незакомічена правка додає цю адресу в `TRUSTED_IPS` (`docker/e2e/phpfpm/.env.docker.e2e`); перевірено: `approval_regression` проходить. Гіпотезу про коміт `dc8d56b1` прогін на `develop` спростував. Решта (8 тестів) не повторюється між прогонами: шум. Усі локальні падіння й flaky уночі проходять (`01-context/audit/nightly-run-2026-09-30.md`). Артефакти: `~/Work/Precoro/local-runs/2026-10-01/` (`before-*.json`, `report-*`).
