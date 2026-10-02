@@ -22,7 +22,7 @@
 
 | Що робиш | Що прочитати |
 | --- | --- |
-| Будь-яка робота з кодом TAF | `06-playbooks/working-agreement.md`: "Протокол підходу" і "Гілки, коміти, PR" (гілки, мерж з `develop`, worktree, коміти лише після "так", хуки, PR) |
+| Будь-яка робота з кодом TAF | `06-playbooks/working-agreement.md`: "Протокол підходу" і "Гілки, коміти, PR" (гілки та їх назви, мерж з `develop`, без worktree, коміти лише після "так", хуки, PR) |
 | Codemod, показник техборгу, гейт | `06-playbooks/playbook-codemod-metrics.md`, "Як робити codemod: покроково"; правило гейта в `05-roadmap/tasks/T0-13.md` |
 | Локальний прогін, "до" і "після" | `06-playbooks/local-run.md` |
 | Помітив дефект або спрощення поза задачею | `01-context/findings.md`, правила зверху |
