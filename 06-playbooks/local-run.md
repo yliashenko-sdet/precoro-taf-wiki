@@ -12,7 +12,7 @@ npm run test:local-smoke          # смоук як на гілці (--grep @smo
 npm run test:local-full -- --workers=8 --project=po_company   # додаткові аргументи Playwright
 ```
 
-Скрипт `scripts/run-local.sh` і два записи в `package.json` — незакомічені зміни в робочому дереві TAF (рішення Yevhen 2026-10-01: у TAF без його «ок» не комітимо). Копія патчем: `~/Work/Precoro/local-runs/run-local-scripts.patch`; на іншу гілку переносити `git apply <patch>`. Скрипт задає те, що запуск через Docker отримує сам:
+Скрипт `scripts/run-local.sh` і два записи в `package.json` закомічені 2026-10-02 у PR #203 (`28db4af6`, гілка `feature/liashenko/quality-gate`); після мержу вони будуть у `develop`. Для гілок, де цього коміту ще нема, копія патчем: `~/Work/Precoro/local-runs/run-local-scripts.patch`, `git apply <patch>`.
 
 | Що | Навіщо |
 | --- | --- |

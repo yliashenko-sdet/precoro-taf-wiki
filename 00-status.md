@@ -57,7 +57,7 @@ _width: wide
 3. На кожній гілці: `make -f Makefile.e2e prepare-db` (репо продукту), `rm -rf .auth`, два прогони `npm run test:local-full -- --workers=8` з репортерами `list,json,html` у `~/Work/Precoro/local-runs/<дата>-<гілка>/` (шаблон: `local-runs/2026-10-01-develop/run-before.sh`).
 4. Порівняти з базою «до» (`local-runs/2026-10-01-develop/before-*.json`) скриптом `local-runs/2026-09-30/classify.js` і крос-табом за тестами: нові падіння відділити від flaky перезапуском; що перевірити в кожній задачі — у картці, розділ «Де зупинились».
 
-Скрипти `test:local-*` у TAF незакомічені: на кожній гілці `git apply ~/Work/Precoro/local-runs/run-local-scripts.patch` (перед checkout іншої гілки `git stash -u`). Не забути: правки стеку продукту лишаються незакоміченими (`06-playbooks/local-run.md`, «Стек продукту»), перед підтягуванням гілки інфра-AQA — `git stash`; у TAF не комітити без «ок» Yevhen; без `Co-Authored-By` (`08-agent/lead-profile.md`).
+Скрипти `test:local-*` закомічені в PR #203 (`28db4af6`); у гілці, що ще не містить цього коміту: `git apply ~/Work/Precoro/local-runs/run-local-scripts.patch` (перед checkout іншої гілки `git stash -u`). Не забути: правки стеку продукту лишаються незакоміченими (`06-playbooks/local-run.md`, «Стек продукту»), перед підтягуванням гілки інфра-AQA — `git stash`; у TAF не комітити без «ок» Yevhen; без `Co-Authored-By` (`08-agent/lead-profile.md`).
 
 ## Facts for stage 1 (2026-09-22)
 

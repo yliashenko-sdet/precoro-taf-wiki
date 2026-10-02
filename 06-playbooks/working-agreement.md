@@ -20,7 +20,7 @@ _organized: true
 - Без `claude` у назвах гілок, без `Co-Authored-By` і "Generated with" у комітах і PR.
 - Зведення з `develop`: мерж, не rebase, щоб хеші з карток лишались правильними. Конфлікти розв'язуються на користь `develop`, потім codemod задачі запускається заново на результаті мержу, ручні правки задачі наносяться поверх. `git checkout --theirs` бере файл цілком: після нього звірити, які неконфліктні правки задачі в цих файлах загубились (`git diff <коміт задачі>~1 <коміт задачі> -- <файл>`).
 - Кілька гілок паралельно: окремий `git worktree` у сусідній теці і symlink на `node_modules`. Не перемикати гілку в робочому дереві, де йде прогін: Playwright читає файли тестів по ходу прогону.
-- Скрипти локального запуску незакомічені: перед `checkout` іншої гілки `git stash -u`, на новій гілці `git apply ~/Work/Precoro/local-runs/run-local-scripts.patch` (`06-playbooks/local-run.md`).
+- Скрипти локального запуску (`test:local-*`) у PR #203; у гілці без цього коміту: `git apply ~/Work/Precoro/local-runs/run-local-scripts.patch`, а перед `checkout` іншої гілки `git stash -u` (`06-playbooks/local-run.md`).
 
 **Коміти**
 - Англійською, з ID задачі: `T0-02: make eslint green without relaxing rules`. Одна задача = один коміт; пов'язані задачі можуть іти в одному PR окремими комітами (гігієна і гейти в #203, рішення Yevhen 2026-10-02).
