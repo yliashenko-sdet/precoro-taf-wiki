@@ -5,24 +5,12 @@ _organized: true
 
 ADR-002. Задачі T0-11, T1-01, T1-02.
 
-```ts
-// src/config/schema.ts
-export interface EnvConfig {
-  name: 'precorino' | 'pre_dev' | 'us' | 'docker' | 'docker_host';
-  baseUrl: string;            // https://app.precorino.com
-  controlUrl: string;
-  mailpitUrl: string;
-  userDomain: string;         // '@acme.com' | '@test.com'
-  db: { url: string };        // з env
-  run: { language: 'en'|'de'|'es'|'fr'; today: () => Date };
-}
-export const secrets = z.object({ MAIN_USER_PASSWORD: z.string(), ... }).parse(process.env);
-```
+Форма інтерфейсу живе в коді: `src/config/schema.ts` у репозиторії TAF (`EnvConfig`, `Secrets`, `RunConfig`, `Language`), самі декларації, їх ще ніхто не імпортує. Звідки взялись поля і чому їх так мало: `01-context/audit/config-keys-2026-10-06.md`.
 
 - `environments/base.ts` містить усе спільне; override на середовище лише те, що відрізняється, ~15 рядків.
-- Вибір середовища однією змінною `RUN_ENV`; `LOCAL_SERVER_URL` стає полем `baseUrl` у override, не селектором.
+- Вибір середовища однією змінною `RUN_ENV`; `LOCAL_SERVER_URL` прибрано ще до T0-11, адресу дає `APP_BASE_URL`.
 - Шляхи сторінок у page-об'єктах: `static path = '/manage/users'`, документи `PoPage.url(idn)`.
-- Юзери в реєстрі компаній (`data-and-companies.md`), не в конфігу.
+- Юзери в реєстрі компаній (`data-and-companies.md`), не в конфігу: 124 ключі і 7 доменів пошти, тож поля `userDomain` в конфігу не буде.
 - Мова і дата прогону явні параметри, пишуться в репорт.
 
 ## Що зникає

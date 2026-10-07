@@ -3,3 +3,4 @@
 
 # Agent context: local only, not for the shared repo
 08-agent/
+__pycache__/
