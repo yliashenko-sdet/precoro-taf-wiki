@@ -35,6 +35,7 @@ _width: wide
 
 ## Дії та очікування
 - `waitForTimeout`, `setTimeout`-паузи, ручні polling-цикли і `networkidle` заборонені; замість них auto-wait, web-first `expect`, `expect.poll` / `toPass`. **[діє: lint `playwright/no-wait-for-timeout`; гейт `waitForTimeout` (#203, 05.10), `sleeps`, `loops with a sleep`, `networkidle waits` (#211, 05.10) → `#gate-waits`]**
+- У новому коді місце виклику не передає число в параметр таймауту власного методу (`waitForOptionalSuccessFlash(20000)`): якщо пійманому очікуванню треба довше, змінюється дефолт методу або передається `Timeouts.slow`. **[ціль: питання #35; гейт цього не бачить — детектор `timeout literals` не рахує позиційне число без сигнатури методу]**
 - Таймаут у коді лише як `Timeouts.slow` для відомо повільної операції; решта бере значення конфігу (`src/config/timeouts.ts`, `TIMEOUT_MULTIPLIER`). Число лишається тільки в очікуванні, результат якого ловиться (відповідь "нема"). **[діє: гейт `timeout literals`, #211, 05.10, ADR-010 → `#gate-timeout-literals`; зниження значень до конвенційних: ціль T1-29]**
 - `.catch(() => {})` лише з коментарем-причиною всередині. `waitFor(...).then(() => true).catch(() => false)` дозволено в `is*` / `has*` / `check*` (AUTO-7817). **[діє: гейт `catch(() => {})`, #203, 05.10 → `#gate-empty-catch`; `.catch` поза предикатами → 0: ціль T2-02]**
 - `force: true`, `clickUsingJavascript`, `dispatchEvent` лише з коментарем `// force: <причина>` над рядком. **[ціль: T2-01, ADR-006; зараз вимога в `CLAUDE.md` (AUTO-7817) без перевірки]**
