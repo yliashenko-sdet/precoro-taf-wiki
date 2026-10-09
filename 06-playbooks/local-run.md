@@ -56,6 +56,17 @@ sh ~/Work/Precoro/local-runs/run-after.sh T1-13    # назва йде в тек
 
 Test Explorer у VS Code показує лише запуски, зроблені з нього самого; прогін з термінала там не видно. Щоб запускати окремі тести з Explorer проти локального стеку, у `settings.json` робочої теки: `"playwright.env": { "RUN_ENV": "docker_host", "QASE_SCOPE_URL": "https://senana.precorino.com/qase/scope" }`; виключення тегів у фільтрі Explorer: `!@not_for_isolated_env`. Для повного прогону Explorer не підходить: із закриттям VS Code прогін зупиняється.
 
+## Оновлення стеку (2026-10-09): коли develop-TAF випереджає стек
+
+Локальний стек був на продукті `94f8a5399b4` (30.09), а `develop` TAF пішов уперед: `adapt-budget-api-path` (#240) переключив TAF на продуктовий роут `POST /api/parent_budget` (з продуктового коміта `4107518aa24`, 01.10). Стек його не мав → **усі бюджетні білдери 404** (`No route found for POST /parent_budget`), ~225 падінь у прогоні, усі швидкі (~1 s), з усіх компаній із бюджетом. Діагностика: падіння швидкі (не таймаут) і всі бюджетні → це прекондишен/API, не UI; у дифі задачі бюджетних файлів нема.
+
+Процедура бампа (гілка `taf/base-2026-10-09` від `origin/Develop`; старий `taf/base` лишаємо відкатом):
+
+1. `git stash push <3 env-файли>` (Makefile.e2e, docker-compose-e2e.yml, docker/e2e/phpfpm/.env.docker.e2e), `git checkout -b taf/base-<дата> origin/Develop`, `git stash apply` (env-правки лягають чисто: scaffolding і seed-імʼя тепер у Develop).
+2. `make -f Makefile.e2e up` (образ + контейнери; Dockerfile майже не змінюється — код змонтований `.:/var/www`), `make deps` (composer install), `$(EXEC) npm ci` (package-lock змінився — `start` цього не робить), `make assets` (npm run build).
+3. **`make -f Makefile.e2e cache-clear` — обовʼязково після бампа.** Інакше скомпільований `var/cache/prod/App_KernelProdContainer.php` від старого коду падає на `Attempted to load class "I18nRouter"`, і `prepare-db` не стартує (`var/` змонтований з хоста, кеш переживає checkout).
+4. `make -f Makefile.e2e prepare-db` (drop → seed 22.09 → міграції → es-sync). Seed-імʼя в Develop те саме (`SEED-FILE?=autotests_seed_2026-09-22.sql.gz`), файл поза git — переживає checkout.
+
 ## Стек продукту
 
 Гайд: `docs/e2e-local-guide.md` у репо продукту. Розгортання з гілки `feature/brynza/docker-jenkinsfile` (інфра-AQA) плюс правки, без яких тести з хоста не працювали. Правки не комітяться (рішення Yevhen, 2026-10-01: пояснення від інфра-AQA, чому цих змінних нема в проєкті, буде пізніше); вони лежать незакоміченими змінами в робочому дереві `~/Work/src/precoro` на `taf/base` і потрібні лише для запуску тестів з хоста, не в Docker:
@@ -100,7 +111,10 @@ Test Explorer у VS Code показує лише запуски, зроблен�
 | 2026-10-02 15:37 – 16:51 | `feature/liashenko/T1-12-value-assertions` (`d20b60c7`: T1-12 + мерж `feature/liashenko/quality-gate` `02a3561e`) | 1 027 | 0 | 6 | 62 | 1.2h | база «до» — прогін гейта 2026-10-01 (рішення Yevhen 2026-10-02). Нових падінь 0; 14 падінь бази (F-12, північ) тут проходять. 6 flaky: `Revise receipt with warehouse` (як завжди) і 5 нових, жоден не на перевірці, яку змінила T1-12 (BPO `fillInValidityPeriod`, `expectStatusApproved`, скелетон після Create, API-ціна в `test_items`, пошук інвойсу в БД). 14 тестів менше, ніж у базі: Qase між прогонами дав їм `@unstable` (QaseID 3043, 4589, 1971, 1168, 3108, 6090; `qase-scope.json` 2026-10-02). 11 змінених T1-12 спек локально не збираються (OCR, імпорт, експорт, інтеграції, `control`, кастомна нумерація, email-налаштування, `icf_dcf`) |
 | 2026-10-05 11:33 – 12:51 UTC (`TZ=UTC`) | `feature/liashenko/T1-13-sleeps-timeouts` (`7b2907d0` + варіант А, закомічено як `0c2fde40`; база `develop` `24b0244e`) | 1 073 | 0 | 9 | 62 | 1.3h | нових падінь 0; зелені тести +1.3% проти T1-12 02.10 (708 спільних, медіана 1.00, шум ±5%). 9 flaky: 2 відмови API в підготовці (403, 400), 7 таймаутів у рядках, яких T1-13 не змінювала; `Revise receipt with warehouse` як завжди. Попередній прогін T1-13 (до варіанта А, 05.10 00:38–02:58) дав 92 падіння: 78 від часового поясу (F-12), 12 від T1-13, і +61% на зеленому шляху; розбір у картці T1-13 |
 
-Прогін, що перетинає північ за Києвом, ламає тести з валютою і бюджетом (F-12): стартувати так, щоб закінчився до 00:00. Артефакти: `~/Work/Precoro/local-runs/2026-10-01-stage-1/` (`after-1.json`, `report-1`, `check-base.json`, `check-branch.json`).
+| 2026-10-09 21:44 – 23:05 UTC (`TZ=UTC`) | `feature/liashenko/T1-30-redundant-page-waits` attached (`9d8bd0ac`); продукт `97764b9dfaf` (стек піднято) | 1 094 | 0 | 7 | 61 | 1.4h | attached-частина T1-30 (608 видалень). Нових падінь 0; 7 flaky baseline-природи (value-mismatch, API-prep 500, strict-mode/I-05, viewport/`Revise receipt`). Зелені −1.2% проти бази T1-13-A (914 спільних, медіана 0.98). База «до» на `c14ff34a`+новий стек не знімалась — звірка падінь потрапельно по трейсах |
+| 2026-10-09 07:17 – 08:49 UTC (`TZ=UTC`) | те саме + loader-коміт `8c5c9529` | 1 086 | **5** | 10 | 61 | 1.5h | **loader-codemod дав регресію**: 5 падінь, усі проходили в прогоні attached-only, усі з сигнатурою прибраного очікування (`click: Timeout 60000ms` ×3, predicate timeout, `TypeError textContent`) у `test_100_plus_options`, `test_icf_dcf_dependencies` (×3), `test_calculations`. Loader-коміт відкочено; лоадери → instrument + nightly (картка T1-30) |
+
+Прогін, що перетинає північ за Києвом, ламає тести з валютою і бюджетом (F-12): стартувати так, щоб закінчився до 00:00. Обхід для нічних прогонів — `TZ=UTC` (тести рахують добу в UTC, як контейнери; так ішли T1-13 і T1-30). Артефакти: `~/Work/Precoro/local-runs/2026-10-01-stage-1/` (`after-1.json`, `report-1`, `check-base.json`, `check-branch.json`).
 
 ## Стан після стабілізації (2026-10-01)
 

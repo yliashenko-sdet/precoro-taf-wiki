@@ -6,7 +6,7 @@ _width: wide
 
 Єдине місце, де записано, де ми зараз. Оновлюється в кінці кожної сесії разом із `99-log.md`. Якщо цей файл суперечить `plan-to-tasks.md`, правильний цей. Контекст, рішення і факти живуть у `01-context`, `03-decisions`, `06-playbooks/working-agreement.md`, тут лише стан.
 
-Оновлено: 2026-10-06
+Оновлено: 2026-10-09
 
 ## Current phase
 
@@ -48,11 +48,13 @@ _width: wide
 
 ## Next task
 
-T0-09: трейс першої невдалої спроби (`retain-on-first-failure`) і ціна, виміряна на локальних прогонах до і після. Код готовий і лежить незакоміченим у робочому дереві (`playwright.config.ts`, `base_fixtures.ts`), бракує лише двох прогонів: перший 06.10 зупинено через F-15. Далі за порядком етапу T0-24.
+1. **T1-30 attached: push + PR** у `develop`. Гілка `feature/liashenko/T1-30-redundant-page-waits` = один чистий коміт `9d8bd0ac` (608 видалень, `attached` 1 085 → 477), валідований прогоном v2 (0 падінь). Чекає рішення Yevhen на push.
+2. **T1-30 loader: instrument + nightly.** Новий підхід (codemod відкочено, бо стереже дані — картка T1-30, «Результат»). Інструментувати `waitForLoaderToDisappear` (лог call-site + чи зʼявився лоадер + мс), merge behind soft wait, нічний прогін → мертві очікування під codemod. Yevhen просив почати 09.10.
+3. Далі за порядком етапу — T0-24.
 
-Незакомічене в TAF: зміни T0-09 плюс новий `src/config/schema.ts` від T0-11. Гілки під них ще нема — за рішенням Євгена 06.10 робимо без гілки і причепимо потім; `schema.ts` з рештою T0-11 має піти окремим PR від змін T0-09.
+T0-09 змерджено (PR #244, коміт `1691d4cb`/`d0ea5447`, `video: 'off'`).
 
-Локальні прогони: `06-playbooks/local-run.md` (база «до» і порівняння `local-runs/2026-09-30/classify.js`). Правки стеку продукту лишаються незакоміченими, перед підтягуванням гілки інфра-AQA `git stash`; у TAF не комітити без «ок» Yevhen; без `Co-Authored-By` (`08-agent/lead-profile.md`).
+Локальний стек піднято на `origin/Develop` 08.10 (`taf/base-2026-10-09`, старий `taf/base` — відкат); процедура і причина — `06-playbooks/local-run.md`, «Оновлення стеку». База «до»: `06-playbooks/local-run.md`. У TAF не комітити без «ок» Yevhen; без `Co-Authored-By` (`08-agent/lead-profile.md`).
 
 ## Facts for stage 1 (2026-09-22)
 
