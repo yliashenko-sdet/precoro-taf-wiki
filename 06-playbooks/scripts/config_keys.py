@@ -11,7 +11,9 @@
 Звідси: мертві ключі (INI \\ USED), відсутні (USED \\ (INI ∪ BUILT)) і групи
 ключів для `EnvConfig` (`04-target/config.md`): середовище / юзери / константи коду.
 
-Доступу `Constants['<key>']` у коді немає (перевірено 2026-10-06), тож grep точний.
+Доступ через дужки рахується і прямий (`Constants['<key>']`), і через аліас із касту
+(`const C = Constants as unknown as Record<string, string>` — такий каст знімає перевірку
+типів, тож ключі за ним компілятор не бачить).
 Вивід: markdown у stdout. Задача T0-11, ADR-002.
 """
 
@@ -26,7 +28,10 @@ SCAN_DIRS = ("src", "scripts")
 SCAN_FILES = ("playwright.config.ts",)
 
 USE_RE = re.compile(r"Constants\.([A-Za-z_][A-Za-z_0-9]*)")
-BRACKET_RE = re.compile(r"Constants\[")
+# Аліас, що вимикає перевірку типів: `const C = Constants as unknown as Record<string, string>`.
+# Через нього ходять `C['ключ']`, яких перший варіант скрипта не бачив і рахував ключі мертвими.
+ALIAS_RE = re.compile(r"(?:const|let|var)\s+([A-Za-z_][A-Za-z_0-9]*)\s*=\s*Constants\b")
+BRACKET_KEY_RE = r"\b{name}\[['\"]([A-Za-z_][A-Za-z_0-9]*)['\"]\]"
 INI_KEY_RE = re.compile(r"^([A-Za-z_][A-Za-z_0-9]*)\s*=\s*(.*)$")
 INI_SECTION_RE = re.compile(r"^\[([^\]]+)\]")
 # Ключ верхнього рівня в літералі, який повертає buildConstants(): рівно 4 пробіли.
@@ -107,8 +112,11 @@ def collect_usages(root):
         text = read(path)
         for key in USE_RE.findall(text):
             usages[key][rel] += 1
-        if BRACKET_RE.search(text):
-            bracket_hits.append(rel)
+        # `Constants['ключ']` і те саме через аліас із касту.
+        for name in ['Constants'] + ALIAS_RE.findall(text):
+            for key in re.findall(BRACKET_KEY_RE.format(name=re.escape(name)), text):
+                usages[key][rel] += 1
+                bracket_hits.append(rel)
     return usages, bracket_hits
 
 
@@ -159,7 +167,7 @@ def main():
                 ["мертвих ключів INI (не використані)", len(dead)],
                 ["мертвих ключів поза INI", len(dead_built)],
                 ["відсутніх ключів (у коді, але ніде не оголошені)", len(missing)],
-                ["доступів `Constants['<key>']`", len(bracket_hits)],
+                ["звернень через дужки (`Constants[...]` і аліаси)", len(bracket_hits)],
             ],
             ["показник", "значення"],
         )

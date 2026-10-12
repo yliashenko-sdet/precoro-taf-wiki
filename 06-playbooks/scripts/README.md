@@ -9,4 +9,5 @@
 | `swagger_coverage.py <endpoints_list.txt> <taf-repo>` | Які ендпоінти Swagger обгорнуті клієнтом TAF | ADR-005, T1-07, T2-09 |
 | `worker_packing_sim.py <latest.json> <playwright.config.ts>` | Симуляція розподілу проектів по воркерах: порядок конфігу vs найбільші першими | T0-22, T1-14 |
 | `config_keys.py <taf-repo>` | Ключі конфігу: INI, явні ключі `buildConstants()`, `Constants.<key>` у коді; мертві, відсутні, групи | `01-context/audit/config-keys-2026-10-06.md`, T0-11 |
+| `constants_snapshot.js <taf-repo> <збірка> <вихід.json>` | Зліпок усіх значень `Constants` (ключ → хеш) для порівняння до і після перенесення конфігу | T1-01, T1-02 |
 | `debt_counters.sh <taf-repo>` | Грубий підрахунок показників боргу grep-ом, до появи `scripts/debt-counters.ts` | `05-roadmap/metrics.md`, T0-13 |

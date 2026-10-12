@@ -59,6 +59,7 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-3
 | `force`/`clickUsingJavascript`/`dispatchEvent` | ~420 | ≤ 20, кожен з коментарем | instrument + nightly run |
 | `doLogin`/`loginAs` у спеках | 498 | 0 | codemod |
 | `db.` у спеках | 1 811 | 0 | codemod + local run |
+| INI-файлів (T1-01, 12.10: 1 → 0, 209 ключів перенесено в `urls.ts`, `test_users.ts`, `env_config.ts`) | 7 | 0 | codemod |
 | `Constants.` (T0-11 06.10: `npm run debt` по `src/` дає 2 127 входжень; `config_keys.py` по `src/`, `scripts/` і `playwright.config.ts` — 2 140 входжень, 339 різних ключів у 161 файлі; аудит 15.09 рахував рядки на `release`, не входження) | 791 | 0 | codemod |
 | Локальні `mergeTests` у спеках | 37 | 0 | codemod |
 | `xpath=` у локаторах | 1 047 | ≤ 100 | codemod + local run |
