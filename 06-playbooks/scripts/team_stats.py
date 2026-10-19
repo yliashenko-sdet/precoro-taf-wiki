@@ -232,17 +232,46 @@ def develop_at(moment):
     return sha or None
 
 
+# One definition of the debt counters for every week, so the series compare: debt.js from this ref is
+# run on each week's tree. PR #284 (T1-11) splits `allure.*` into gated steps/attachments; until it is
+# merged its branch holds the current definition, and once the branch is gone origin/develop does.
+DEBT_DEF_REFS = ['origin/feature/liashenko/T1-11-test-step-attach', 'origin/develop']
+ALLURE_META = re.compile(r'\ballure\s*\.\s*(?!step\b|attachment\b)\w+\s*\(')
+ALLURE_META_NAME = 'allure metadata: description / suite / subSuite / displayName (T0-26)'
+
+
+def debt_definition():
+    for ref in DEBT_DEF_REFS:
+        sha = subprocess.run(['git', 'rev-parse', '--verify', '-q', f'{ref}^{{commit}}'], cwd=TAF,
+                             capture_output=True, text=True).stdout.strip()
+        if sha:
+            return ref, sha
+    raise SystemExit('no ref with scripts/debt.js found')
+
+
+def strip_comments(src):
+    return re.sub(r'/\*.*?\*/|//[^\n]*', '', src, flags=re.S)
+
+
 def debt_at(sha):
-    out = os.path.join(STORE, 'raw', 'debt', f'{sha}.json')
+    ref, def_sha = debt_definition()
+    out = os.path.join(STORE, 'raw', 'debt', f'{sha}-def{def_sha[:8]}.json')
     if os.path.exists(out):
         return load(out)
     with tempfile.TemporaryDirectory() as tmp:
         arch = subprocess.run(['git', 'archive', sha], cwd=TAF, capture_output=True)
         subprocess.run(['tar', '-x', '-C', tmp], input=arch.stdout, check=True)
+        definition = subprocess.run(['git', 'show', f'{def_sha}:scripts/debt.js'], cwd=TAF, capture_output=True).stdout
+        open(os.path.join(tmp, 'scripts', 'debt.js'), 'wb').write(definition)
         subprocess.run(['git', 'init', '-q'], cwd=tmp, check=True)
         subprocess.run(['git', 'add', '-A'], cwd=tmp, check=True)
         r = subprocess.run(['node', 'scripts/debt.js'], cwd=tmp, capture_output=True, text=True,
                            env={**os.environ, 'NODE_PATH': os.path.join(TAF, 'node_modules')})
+        meta = 0
+        for root, _, files in os.walk(os.path.join(tmp, 'src', 'ui')):
+            for f in files:
+                if f.endswith('.ts'):
+                    meta += len(ALLURE_META.findall(strip_comments(open(os.path.join(root, f), encoding='utf-8').read())))
     if r.returncode:
         return None
     counts = {}
@@ -250,12 +279,14 @@ def debt_at(sha):
         m = re.match(r'(.+?)\s{2,}(\d+)(\s+yes)?\s*$', line)
         if m:
             counts[m[1].strip()] = {'n': int(m[2]), 'gated': bool(m[3])}
+    counts[ALLURE_META_NAME] = {'n': meta, 'gated': False}
+    counts['_definition'] = {'ref': ref, 'sha': def_sha[:8]}
     save(out, counts)
     return counts
 
 
 def collect_debt(weeks):
-    subprocess.run(['git', 'fetch', '-q', 'origin', 'develop'], cwd=TAF)
+    subprocess.run(['git', 'fetch', '-q', '--prune', 'origin'], cwd=TAF)
     done = []
     w = last_week()
     for _ in range(weeks):
@@ -406,7 +437,8 @@ def debt_metrics(end):
     counts = debt_at(sha) if sha else None
     if not counts:
         return {}, {}
-    return {DEBT_PREFIX + k: v['n'] for k, v in counts.items()}, {'debt_commit': sha[:8]}
+    return ({DEBT_PREFIX + k: v['n'] for k, v in counts.items() if not k.startswith('_')},
+            {'debt_commit': sha[:8], 'debt_definition': counts.get('_definition')})
 
 
 def compute_week(week):
@@ -588,7 +620,8 @@ def export(weeks_back):
         data['weeks'].append({'id': w, 'from': m['from'], 'to': m['to']})
         data['metrics'][w] = {k: v for k, v in m['metrics'].items() if not k.startswith(DEBT_PREFIX)}
         data['debt'][w] = {k[len(DEBT_PREFIX):]: v for k, v in m['metrics'].items() if k.startswith(DEBT_PREFIX)}
-        data['lists'][w] = {k: m['lists'].get(k) for k in ('top_flaky', 'new_failures', 'multi_branch_tests', 'merged')}
+        data['lists'][w] = {k: m['lists'].get(k) for k in ('top_flaky', 'new_failures', 'multi_branch_tests', 'merged',
+                                                          'debt_commit', 'debt_definition')}
         t = load(os.path.join(STORE, 'weeks', w, 'topics.json'))
         if t:
             data['topics'][w] = t
