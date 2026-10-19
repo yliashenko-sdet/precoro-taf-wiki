@@ -69,7 +69,7 @@ CATALOG = {
     'nightly.failed': ('Фінально впало за ніч, медіана', 'тестів', 'down', 'QA Jenkins Allure', None),
     'nightly.flaky_tests': ('Різних тестів, flaky хоч раз за тиждень', 'тестів', 'down', 'QA Jenkins Allure', None),
     'nightly.new_failures': ('Нові падіння: падали цього тижня, минулого ні', 'тестів', 'down', 'QA Jenkins Allure', None),
-    'nightly.wall_h': ('Wall-clock нічного, медіана', 'год', 'down', 'QA Jenkins', None),
+    'nightly.wall_min': ('Wall-clock нічного, медіана', 'хв', 'down', 'QA Jenkins', None),
     'nightly.machine_h': ('Machine-time нічного (сума тестів), медіана', 'год', 'down', 'QA Jenkins Allure', None),
     'nightly.sec_per_test': ('Machine-time на тест, медіана', 'с', 'down', 'QA Jenkins Allure', None),
     'branch.builds': ('Гілкових білдів', 'білдів', None, 'dev Jenkins', None),
@@ -284,7 +284,7 @@ def nights_in(start, end):
         c = {s: sum(1 for v in states.values() if v == s) for s in ('pass', 'flaky', 'fail')}
         executed = len(states)
         out.append({'number': int(n), 'start': b['start'], 'branch': b.get('branch'), 'line': line_of(b.get('branch')),
-                    'sha': b.get('sha'), 'wall_h': round(b['duration'] / 3_600_000, 2),
+                    'sha': b.get('sha'), 'wall_min': round(b['duration'] / 60_000),
                     'machine_h': round(sum(t[2] for t in tests) / 3_600_000, 2), 'executed': executed,
                     'sec_per_test': round(sum(t[2] for t in tests) / 1000 / executed, 1),
                     'flaky': c['flaky'], 'failed': c['fail'], 'flaky_pct': round(c['flaky'] / executed * 100, 2),
@@ -325,7 +325,7 @@ def nightly_metrics(start, end):
         'nightly.failed': median(n['failed'] for n in good),
         'nightly.flaky_tests': len(flaky_count),
         'nightly.new_failures': len(new_fail) if prev else None,
-        'nightly.wall_h': median(n['wall_h'] for n in good),
+        'nightly.wall_min': median(n['wall_min'] for n in good),
         'nightly.machine_h': median(n['machine_h'] for n in good),
         'nightly.sec_per_test': median(n['sec_per_test'] for n in good),
     }
@@ -531,11 +531,11 @@ def report(week):
         lines.append('')
     L = cur['lists']
     if L.get('nights'):
-        lines += ['### Ночі тижня', '', '| Збірка | Старт | Гілка TAF | Виконано | Flaky | Впало | Wall, год | Machine, год | |',
+        lines += ['### Ночі тижня', '', '| Збірка | Старт | Гілка TAF | Виконано | Flaky | Впало | Wall, хв | Machine, год | |',
                   '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |']
         for n in L['nights']:
             lines.append(f"| {n['number']} | {dt.datetime.fromtimestamp(n['start'] / 1000):%a %d.%m} | `{n.get('branch') or '?'}` | {n['executed']} | "
-                         f"{n['flaky']} ({n['flaky_pct']}%) | {n['failed']} | {n['wall_h']} | {n['machine_h']} | "
+                         f"{n['flaky']} ({n['flaky_pct']}%) | {n['failed']} | {n['wall_min']} | {n['machine_h']} | "
                          f"{'масова, виключено' if n['mass'] else ''} |")
         lines.append('')
     for key, title in (('top_flaky', 'Найчастіше flaky за тиждень (ночей flaky / ночей)'),
@@ -571,7 +571,7 @@ def report(week):
 
 
 # Phase targets from 05-roadmap/metrics.md (phase 1), in the catalogue's units.
-TARGETS = {'nightly.flaky_pct': 1.0, 'nightly.wall_h': 1.0, 'nightly.machine_h': 17.0}
+TARGETS = {'nightly.flaky_pct': 1.0, 'nightly.wall_min': 60, 'nightly.machine_h': 17.0}
 PAGE_DIR = os.path.expanduser('~/Work/Precoro/artifacts/taf-stats')
 
 
@@ -595,7 +595,7 @@ def export(weeks_back):
     start = week_bounds(weeks[0])[0]
     for n in nights_in(start, week_bounds(weeks[-1])[1]):
         data['nights'].append({k: n[k] for k in ('number', 'branch', 'line', 'mass', 'executed', 'flaky', 'failed',
-                                                 'flaky_pct', 'wall_h', 'machine_h', 'sec_per_test')}
+                                                 'flaky_pct', 'wall_min', 'machine_h', 'sec_per_test')}
                               | {'date': dt.datetime.fromtimestamp(n['start'] / 1000).strftime('%Y-%m-%d')})
     for e in sorted(load(os.path.join(STORE, 'journal.json'), []), key=lambda e: e['merged'], reverse=True):
         if e.get('transformation'):
