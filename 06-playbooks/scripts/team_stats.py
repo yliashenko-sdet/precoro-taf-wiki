@@ -6,6 +6,7 @@
     python3 team_stats.py report  [--week 2026-W42]     # report.md of that week: table, movers, change journal
     python3 team_stats.py journal-sync                   # new merged TAF PRs into journal.json, hypothesis empty
     python3 team_stats.py catalog                        # the metric catalogue as a markdown table
+    python3 team_stats.py export                         # data.json of the TAF stats page (~/Work/Precoro/artifacts/taf-stats)
 
 A week is an ISO week, Monday 00:00 to Sunday 24:00 local time; without --week, the last finished one.
 Store: ~/Work/Precoro/stats (STATS_DIR). Layout:
@@ -569,6 +570,42 @@ def report(week):
     print(out)
 
 
+# Phase targets from 05-roadmap/metrics.md (phase 1), in the catalogue's units.
+TARGETS = {'nightly.flaky_pct': 1.0, 'nightly.wall_h': 1.0, 'nightly.machine_h': 17.0}
+PAGE_DIR = os.path.expanduser('~/Work/Precoro/artifacts/taf-stats')
+
+
+def export(weeks_back):
+    """data.json for the TAF stats page: every computed week, the nights, the journal, the topics."""
+    weeks = sorted(w for w in os.listdir(os.path.join(STORE, 'weeks'))
+                   if os.path.exists(os.path.join(STORE, 'weeks', w, 'metrics.json')))[-weeks_back:]
+    data = {'generated': dt.datetime.now().isoformat(timespec='minutes'), 'weeks': [], 'metrics': {}, 'debt': {},
+            'catalog': {k: {'label': v[0], 'unit': v[1], 'better': v[2], 'source': v[3], 'held': v[4],
+                            'group': k.split('.')[0], 'target': TARGETS.get(k)} for k, v in CATALOG.items()},
+            'nights': [], 'journal': [], 'topics': {}, 'lists': {}}
+    for w in weeks:
+        m = load(os.path.join(STORE, 'weeks', w, 'metrics.json'))
+        data['weeks'].append({'id': w, 'from': m['from'], 'to': m['to']})
+        data['metrics'][w] = {k: v for k, v in m['metrics'].items() if not k.startswith(DEBT_PREFIX)}
+        data['debt'][w] = {k[len(DEBT_PREFIX):]: v for k, v in m['metrics'].items() if k.startswith(DEBT_PREFIX)}
+        data['lists'][w] = {k: m['lists'].get(k) for k in ('top_flaky', 'new_failures', 'multi_branch_tests', 'merged')}
+        t = load(os.path.join(STORE, 'weeks', w, 'topics.json'))
+        if t:
+            data['topics'][w] = t
+    start = week_bounds(weeks[0])[0]
+    for n in nights_in(start, week_bounds(weeks[-1])[1]):
+        data['nights'].append({k: n[k] for k in ('number', 'branch', 'line', 'mass', 'executed', 'flaky', 'failed',
+                                                 'flaky_pct', 'wall_h', 'machine_h', 'sec_per_test')}
+                              | {'date': dt.datetime.fromtimestamp(n['start'] / 1000).strftime('%Y-%m-%d')})
+    for e in sorted(load(os.path.join(STORE, 'journal.json'), []), key=lambda e: e['merged'], reverse=True):
+        if e.get('transformation'):
+            data['journal'].append({k: e.get(k) for k in ('pr', 'title', 'task', 'merged', 'hypothesis', 'retro', 'metrics')}
+                                   | {'eval': {k: list(v) for k, v in evaluate(e).items()}})
+    out = os.path.join(PAGE_DIR, 'data.json')
+    save(out, data)
+    print(out)
+
+
 def catalog():
     print('| Ключ | Показник | Одиниця | Краще | Джерело | Чекає |\n| --- | --- | --- | --- | --- | --- |')
     for k, (label, unit, better, source, held) in CATALOG.items():
@@ -578,10 +615,11 @@ def catalog():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['collect', 'week', 'report', 'journal-sync', 'catalog'])
+    ap.add_argument('cmd', choices=['collect', 'week', 'report', 'journal-sync', 'catalog', 'export'])
     ap.add_argument('--week')
     ap.add_argument('--only', default='nightly,github,debt,jenkins-dev')
     ap.add_argument('--weeks', type=int, default=3, help='collect debt for this many last weeks')
+    ap.add_argument('--weeks-back', type=int, default=12, help='export: this many last computed weeks')
     a = ap.parse_args()
     week = a.week or last_week()
     if a.cmd == 'collect':
@@ -597,6 +635,8 @@ def main():
         print(json.dumps(d['metrics'], ensure_ascii=False, indent=1))
     elif a.cmd == 'report':
         report(week)
+    elif a.cmd == 'export':
+        export(a.weeks_back)
     elif a.cmd == 'journal-sync':
         journal_sync()
     else:

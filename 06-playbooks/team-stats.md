@@ -8,6 +8,7 @@
 - Каталог показників (назва, одиниця, кращий напрям, джерело) задано лише в `CATALOG` у скрипті. Таблицю друкує `python3 scripts/team_stats.py catalog`.
 - Сховище: `~/Work/Precoro/stats/`, локальний git-репозиторій. Там сирі зрізи (нічні з QA Jenkins, гілкові з dev Jenkins, Slack, PR GitHub, `npm run debt` на `develop`), а також `weeks/<YYYY-Www>/metrics.json` і `report.md` та `journal.json`.
 - Процедура (порядок кроків, формат Slack-зрізу, правила вибору тем) описана в скілі `automation-weekly`.
+- Сторінка для команди: **Precoro TAF Stats** (https://claude.ai/artifact/FjtrZ6RxG2pA3WjrhG4piF), дві вкладки — теми тижня і всі показники. Дані з `team_stats.py export`, сирець у `~/Work/Precoro/artifacts/taf-stats/`.
 - Збір по робочих днях (пн–пт) о 12:00 на Mac Євгена (launchd `com.precoro.taf-stats`, `stats/bin/daily-collect.sh`), бо Jenkins зберігає лише 31 нічну збірку, а гілкові зникають при мержі PR. Slack читається раз на тиждень під час підготовки: треди в Slack лишаються.
 
 ## Джерела
