@@ -21,7 +21,7 @@ Store: ~/Work/Precoro/stats (STATS_DIR). Layout:
     journal.json                  TAF changes and the metric each one is expected to move
 
 Credentials: QA Jenkins JENKINS_URL, JENKINS_USER_NAME, JENKINS_PASS; dev Jenkins JENKINS_DEV_*;
-both from the environment or the TAF .env. GitHub through `gh`. Nothing secret is printed or stored.
+JENKINS_DEV_USER_NAME or JENKINS_DEV_USER; all from the environment or the TAF .env. GitHub through `gh`. Nothing secret is printed or stored.
 """
 import argparse
 import base64
@@ -43,6 +43,13 @@ TAF = os.path.expanduser(os.environ.get('TAF_REPO', '~/Work/src/precoro-e2e-play
 TAF_ENV = os.environ.get('TAF_ENV', os.path.join(TAF, '.env'))
 NIGHTLY_JOB = 'Daily%20autotests%20-%20all%20tests'
 FULL_NIGHT_H = 2.5      # shorter builds are aborted or broken runs, not a night of the suite
+# Nightly counts on develop and on the team's daily fix branches (fix/<date>, fix/<name>/<date>);
+# runs on other branches are debug or check runs and are left out (Yevhen, 2026-10-19).
+NIGHTLY_BRANCHES = re.compile(os.environ.get('NIGHTLY_BRANCHES', r'^(develop|fix/([^/]+/)?\d{2}-\d{2}-\d{2,4})$'))
+
+
+def line_of(branch):
+    return 'develop' if branch == 'develop' else 'fix' if (branch or '').startswith('fix/') else 'other'
 MASS_PCT = 10.0         # a night where more tests finally failed is an environment failure
 WINDOW = 7              # nights before / after a change in the journal
 TRANSFORMATION_START = '2026-10-01'   # first TAF 2.0 PRs to develop; the journal starts here
@@ -51,7 +58,10 @@ BOTS = ('coderabbitai', 'copilot-pull-request-reviewer')
 # key: (label, unit, better, source, held). better: 'down' | 'up' | None.
 # held: why the number is collected but not brought to the meeting yet.
 CATALOG = {
-    'nightly.nights': ('Повних нічних прогонів', 'ночей', None, 'QA Jenkins', None),
+    'nightly.nights': ('Повних нічних прогонів на `develop` і `fix/<дата>`', 'ночей', None, 'QA Jenkins', None),
+    'nightly.on_develop': ('з них на `develop`', 'ночей', None, 'QA Jenkins', None),
+    'nightly.on_fix': ('з них на `fix/<дата>`', 'ночей', None, 'QA Jenkins', None),
+    'nightly.other_branch': ('Нічних на інших гілках (не враховано)', 'ночей', None, 'QA Jenkins', None),
     'nightly.mass_nights': ('Масових ночей (>10% впало, виключено)', 'ночей', 'down', 'QA Jenkins', None),
     'nightly.executed': ('Тестів виконано за ніч, медіана', 'тестів', None, 'QA Jenkins Allure', None),
     'nightly.flaky_pct': ('Flaky rate за ніч, медіана', '%', 'down', 'QA Jenkins Allure', None),
@@ -156,13 +166,18 @@ def collect_nightly():
     base, auth = c[0].rstrip('/'), 'Basic ' + base64.b64encode(f'{c[1]}:{c[2]}'.encode()).decode()
     d = os.path.join(STORE, 'raw', 'nightly')
     index = load(os.path.join(d, 'index.json'), {})
-    tree = urllib.parse.quote('builds[number,result,timestamp,duration,building]')
+    tree = urllib.parse.quote('builds[number,result,timestamp,duration,building,'
+                              'actions[lastBuiltRevision[SHA1,branch[name]]]]')
     new = 0
     for b in fetch(base, auth, f'/job/{NIGHTLY_JOB}/api/json?tree={tree}')['builds']:
         if b.get('building'):
             continue
         n = str(b['number'])
-        index[n] = {'number': b['number'], 'result': b['result'], 'start': b['timestamp'], 'duration': b['duration']}
+        rev = next((a['lastBuiltRevision'] for a in b.get('actions') or [] if a and a.get('lastBuiltRevision')), {})
+        branch = next((x['name'] for x in rev.get('branch') or []), None)
+        index[n] = {'number': b['number'], 'result': b['result'], 'start': b['timestamp'], 'duration': b['duration'],
+                    'branch': re.sub(r'^(refs/remotes/)?origin/', '', branch) if branch else None,
+                    'sha': rev.get('SHA1')}
         out = os.path.join(d, f'{n}.json')
         if b['duration'] < FULL_NIGHT_H * 3_600_000 or os.path.exists(out):
             continue
@@ -185,8 +200,9 @@ def collect_nightly():
 
 
 def collect_jenkins_dev():
-    if not env_creds(['JENKINS_DEV_URL', 'JENKINS_DEV_USER', 'JENKINS_DEV_PASS']):
-        return ('jenkins-dev: skipped, JENKINS_DEV_URL / JENKINS_DEV_USER / JENKINS_DEV_PASS not set; '
+    if not (env_creds(['JENKINS_DEV_URL', 'JENKINS_DEV_USER_NAME', 'JENKINS_DEV_PASS'])
+            or env_creds(['JENKINS_DEV_URL', 'JENKINS_DEV_USER', 'JENKINS_DEV_PASS'])):
+        return ('jenkins-dev: skipped, JENKINS_DEV_URL / JENKINS_DEV_USER_NAME / JENKINS_DEV_PASS not set; '
                 'branch history of merged PRs is lost every day this does not run')
     r = subprocess.run([sys.executable, os.path.join(HERE, 'jenkins_dev_builds.py'), 'collect',
                         '--store', os.path.join(STORE, 'raw', 'jenkins-dev')], capture_output=True, text=True)
@@ -194,7 +210,7 @@ def collect_jenkins_dev():
 
 
 def collect_github():
-    fields = 'number,title,author,createdAt,mergedAt,closedAt,state,baseRefName,isDraft,reviews,additions,deletions'
+    fields = 'number,title,author,createdAt,mergedAt,closedAt,state,baseRefName,isDraft,reviews,additions,deletions,mergeCommit'
     r = subprocess.run(['gh', 'pr', 'list', '--state', 'all', '--limit', '1000', '--json', fields],
                        cwd=TAF, capture_output=True, text=True)
     if r.returncode:
@@ -202,6 +218,7 @@ def collect_github():
     prs = json.loads(r.stdout)
     for p in prs:   # keep logins only: who reviewed and when
         p['author'] = (p.get('author') or {}).get('login')
+        p['mergeCommit'] = (p.get('mergeCommit') or {}).get('oid')
         p['reviews'] = [{'by': (x.get('author') or {}).get('login'), 'at': x.get('submittedAt'), 'state': x.get('state')}
                         for x in p.get('reviews') or []]
     save(os.path.join(STORE, 'raw', 'github', 'prs.json'), {'taken': dt.datetime.now().isoformat(), 'prs': prs})
@@ -255,7 +272,7 @@ def nights_in(start, end):
     index = load(os.path.join(d, 'index.json'), {})
     out = []
     for n, b in sorted(index.items(), key=lambda kv: int(kv[0])):
-        if not (ms(start) <= b['start'] < ms(end)):
+        if not (ms(start) <= b['start'] < ms(end)) or not NIGHTLY_BRANCHES.search(b.get('branch') or ''):
             continue
         tests = load(os.path.join(d, f'{n}.json'))
         if tests is None:
@@ -265,7 +282,8 @@ def nights_in(start, end):
             states[key] = state
         c = {s: sum(1 for v in states.values() if v == s) for s in ('pass', 'flaky', 'fail')}
         executed = len(states)
-        out.append({'number': int(n), 'start': b['start'], 'wall_h': round(b['duration'] / 3_600_000, 2),
+        out.append({'number': int(n), 'start': b['start'], 'branch': b.get('branch'), 'line': line_of(b.get('branch')),
+                    'sha': b.get('sha'), 'wall_h': round(b['duration'] / 3_600_000, 2),
                     'machine_h': round(sum(t[2] for t in tests) / 3_600_000, 2), 'executed': executed,
                     'sec_per_test': round(sum(t[2] for t in tests) / 1000 / executed, 1),
                     'flaky': c['flaky'], 'failed': c['fail'], 'flaky_pct': round(c['flaky'] / executed * 100, 2),
@@ -273,10 +291,16 @@ def nights_in(start, end):
     return out
 
 
+def other_branch_nights(start, end):
+    index = load(os.path.join(STORE, 'raw', 'nightly', 'index.json'), {})
+    return sum(1 for b in index.values() if ms(start) <= b['start'] < ms(end)
+               and b['duration'] >= FULL_NIGHT_H * 3_600_000 and not NIGHTLY_BRANCHES.search(b.get('branch') or ''))
+
+
 def nightly_metrics(start, end):
     nights = nights_in(start, end)
     if not nights:
-        return {}, {}
+        return {'nightly.nights': 0, 'nightly.other_branch': other_branch_nights(start, end)}, {}
     good = [n for n in nights if not n['mass']]
     prev = [n for n in nights_in(start - dt.timedelta(days=7), start) if not n['mass']]
     flaky_count, fail_count = {}, {}
@@ -291,7 +315,10 @@ def nightly_metrics(start, end):
     new_fail = sorted((k for k, c in fail_count.items() if (c >= 2 or len(good) < 2) and k in prev_seen
                        and k not in prev_failed), key=lambda k: -fail_count[k])
     m = {
-        'nightly.nights': len(nights), 'nightly.mass_nights': len(nights) - len(good),
+        'nightly.nights': len(nights), 'nightly.other_branch': other_branch_nights(start, end),
+        'nightly.on_develop': sum(1 for n in nights if line_of(n['branch']) == 'develop'),
+        'nightly.on_fix': sum(1 for n in nights if line_of(n['branch']) == 'fix'),
+        'nightly.mass_nights': len(nights) - len(good),
         'nightly.executed': median(n['executed'] for n in good),
         'nightly.flaky_pct': median(n['flaky_pct'] for n in good),
         'nightly.failed': median(n['failed'] for n in good),
@@ -408,7 +435,8 @@ def journal_sync():
                 or p['mergedAt'] < TRANSFORMATION_START):
             continue
         task = re.search(r'\bT\d-\d{2}\b', p['title'])
-        journal.append({'pr': p['number'], 'title': p['title'], 'merged': p['mergedAt'], 'task': task[0] if task else None,
+        journal.append({'pr': p['number'], 'title': p['title'], 'merged': p['mergedAt'], 'commit': p.get('mergeCommit'),
+                        'task': task[0] if task else None,
                         'author': p['author'], 'transformation': None, 'hypothesis': '', 'metrics': [],
                         'recorded': today, 'retro': None})
         added += 1
@@ -417,11 +445,29 @@ def journal_sync():
     print(f'journal: {len(journal)} entries, +{added}; to classify (transformation true/false, hypothesis, metrics): {todo}')
 
 
+_ancestry = {}
+
+
+def contains(night_sha, commit):
+    """Whether the TAF commit the night ran on includes the PR's merge commit."""
+    if not night_sha or not commit:
+        return None
+    key = (night_sha, commit)
+    if key not in _ancestry:
+        r = subprocess.run(['git', 'merge-base', '--is-ancestor', commit, night_sha], cwd=TAF, capture_output=True)
+        _ancestry[key] = {0: True, 1: False}.get(r.returncode)
+    return _ancestry[key]
+
+
 def evaluate(entry):
-    """Nightly metrics: medians over up to WINDOW full non-mass nights before and after the merge."""
+    """Nightly metrics: medians over up to WINDOW full non-mass nights whose TAF commit lacks the change
+    (before the merge) against up to WINDOW nights whose commit has it. The nightly job runs whatever
+    branch it is pointed at (develop, a daily fix branch, a feature branch), so the merge date alone
+    does not say which nights carried the change."""
     merged = dt.datetime.fromisoformat(entry['merged'].replace('Z', '+00:00')).astimezone().replace(tzinfo=None)
-    before = [n for n in nights_in(merged - dt.timedelta(days=21), merged) if not n['mass']][-WINDOW:]
-    after = [n for n in nights_in(merged, merged + dt.timedelta(days=21)) if not n['mass']][:WINDOW]
+    nights = [n for n in nights_in(merged - dt.timedelta(days=28), merged + dt.timedelta(days=28)) if not n['mass']]
+    before = [n for n in nights if n['start'] < ms(merged) and contains(n['sha'], entry.get('commit')) is False][-WINDOW:]
+    after = [n for n in nights if contains(n['sha'], entry.get('commit'))][:WINDOW]
     res = {}
     for key in entry['metrics']:
         f = key.split('.', 1)[1]
@@ -484,10 +530,10 @@ def report(week):
         lines.append('')
     L = cur['lists']
     if L.get('nights'):
-        lines += ['### Ночі тижня', '', '| Збірка | Старт | Виконано | Flaky | Впало | Wall, год | Machine, год | |',
-                  '| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |']
+        lines += ['### Ночі тижня', '', '| Збірка | Старт | Гілка TAF | Виконано | Flaky | Впало | Wall, год | Machine, год | |',
+                  '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |']
         for n in L['nights']:
-            lines.append(f"| {n['number']} | {dt.datetime.fromtimestamp(n['start'] / 1000):%a %d.%m} | {n['executed']} | "
+            lines.append(f"| {n['number']} | {dt.datetime.fromtimestamp(n['start'] / 1000):%a %d.%m} | `{n.get('branch') or '?'}` | {n['executed']} | "
                          f"{n['flaky']} ({n['flaky_pct']}%) | {n['failed']} | {n['wall_h']} | {n['machine_h']} | "
                          f"{'масова, виключено' if n['mass'] else ''} |")
         lines.append('')
@@ -506,11 +552,14 @@ def report(week):
     tr = [e for e in journal if e.get('transformation')]
     if tr:
         lines += ['', '## Журнал змін TAF: очікуваний і виміряний ефект', '',
-                  f'Нічні показники: медіана до {WINDOW} повних не-масових ночей до мержу і після.', '',
+                  f'Нічні показники: медіана до {WINDOW} повних немасових ночей, чий коміт TAF ще не містить зміни, '
+                  f'проти до {WINDOW}, що містять (нічний ганяє різні гілки, дата мержу цього не визначає).', '',
                   '| PR | Задача | Змерджено | Гіпотеза | Показник: до → після (ночей) |', '| --- | --- | --- | --- | --- |']
         for e in sorted(tr, key=lambda e: e['merged'], reverse=True):
             ev = evaluate(e)
             res = '; '.join(f'{CATALOG.get(k, (k,))[0]}: {fmt(b)} → {fmt(a)} ({nb}/{na})' for k, (b, a, nb, na) in ev.items())
+            if ev and min(min(v[2], v[3]) for v in ev.values()) < 3:
+                res += ' — мало ночей, не висновок'
             if not res and e['metrics']:
                 res = 'ще збирається' if any(k.startswith('nightly.') for k in e['metrics']) else 'не нічний показник'
             lines.append(f"| #{e['pr']} | {e.get('task') or ''} | {e['merged'][:10]} | "
