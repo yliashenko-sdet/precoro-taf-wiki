@@ -27,15 +27,16 @@ npm run test:local-full -- --workers=8 --project=po_company   # додатков
 
 ## Як стежити за прогоном
 
-Прогін «після» на поточній гілці запускається з термінала одним шаблоном (з 2026-10-02):
+Прогін запускається скриптами скіла `local-run` у репозиторії TAF; повний опис — `docs/local-run.md`, розділ 3 (там же всі опції). Довгі прогони запускає Yevhen з термінала: фонові команди Claude обмежені ~30 хв.
 
 ```bash
-sh ~/Work/Precoro/local-runs/run-after.sh T1-13    # назва йде в теку <дата>-<назва>
+cd ~/Work/src/precoro-e2e-playwright
+bash .claude/skills/local-run/scripts/start.sh full --workers 6 --label T0-18 --add-trace --start-logs
 ```
 
-Шаблон сам створює теку, на старті друкує готову команду стеження `tail -F` (з 2026-10-10; `-F` чекає, поки `after-1.log` з'явиться після `prepare-db`, тоді як `-f` одразу падав на «No such file»), шлях до `after.meta` і звіту, і відмовляється стартувати, якщо вже йде інший прогін, `prepare-db` або імпорт seed у контейнері (два одночасні `prepare-db` ламають базу, 2026-10-02). Довгі прогони запускає Yevhen з термінала: фонові команди Claude обмежені ~30 хв.
+`start.sh` відмовляється стартувати, якщо вже йде інший прогін, `prepare-db` або імпорт seed (два одночасні `prepare-db` ламають базу, 2026-10-02). `--start-logs` одразу показує живий перебіг (`watch.js`) у тому ж терміналі, `Ctrl+C` зупиняє лише перегляд. `--start-logs` і `--add-trace` додані в PR #305 (AUTO-9962); до його мержу їх нема в `develop`, і там `start.sh` передасть їх Playwright як невідомі аргументи. `--add-trace` після кожної невдалої спроби друкує помилку, стек і команду `show-trace` для trace.zip останнього ретраю. `--prepare-db` спершу скидає базу стеку з найсвіжішого seed-дампа.
 
-Кожен прогін лежить у своїй теці поза репозиторієм: `~/Work/Precoro/local-runs/<дата>-<гілка>/`. У ній скрипт прогону (`run-before.sh` для бази, `run-after.sh` для гілки), `*.meta` (коміти TAF і продукту, час старту і кінця), живий лог `before-1.log` або `after-1.log`, результат для порівняння `*.json` і HTML-звіт `report-1/`.
+Кожен прогін лежить у своїй теці поза репозиторієм: `~/local-runs/<дата>-<час>-<мітка>/`. У ній `meta` (режим, воркери, коміти TAF і продукту, час старту і кінця, `exit`), живий лог `run.log`, результат для порівняння `results.json`, HTML-звіт `report/` і, якщо був, `prepare-db.log`. Прогони, запущені старими шаблонами `run-before.sh` / `run-after.sh`, лежать у `~/Work/Precoro/local-runs/<дата>-<гілка>/` з логами `before-1.log` / `after-1.log`.
 
 **Критерії прогону «після»** (будь-яка задача, що міняє поведінку тестів):
 1. Нових падінь проти бази немає; нові падіння перезапуском відділені від flaky.
@@ -43,16 +44,16 @@ sh ~/Work/Precoro/local-runs/run-after.sh T1-13    # назва йде в тек
 
 Гілку задачі перевіряє **один** повний прогін на хості після свіжого `prepare-db` (рішення Yevhen 2026-10-01; два прогони були потрібні лише для бази, щоб переконатись у стабільності середовища). Нові падіння перезапускаються окремо, щоб відділити flaky.
 
-Приклад на прогоні гілки `feature/liashenko/quality-gate` 2026-10-01:
+Без аргументу команди беруть останній прогін; для іншого — тека першим аргументом (`run-dir.sh --list` показує всі):
 
 | Що | Команда |
 | --- | --- |
-| Живий перебіг: ✓ пройшов, ✘ впав, число це номер тесту в прогоні; `Ctrl+C` зупиняє лише перегляд | `tail -F ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log \| grep --line-buffered -E "✓\|✘"` |
-| Скільки пройшло і впало зараз | `grep -c "✓" ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log; grep -c "✘" ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log` |
-| Лише падіння | `grep "✘" ~/Work/Precoro/local-runs/2026-10-01-stage-1/after-1.log` |
-| Звіт після прогону: фільтри, помилки, скріншоти | `npx playwright show-report ~/Work/Precoro/local-runs/2026-10-01-stage-1/report-1` |
+| Живий перебіг (якщо стартували без `--start-logs` або з іншого термінала) | `node .claude/skills/local-run/scripts/watch.js` |
+| Стан зараз: прогрес, лічильники, нові падіння проти бази | `node .claude/skills/local-run/scripts/status.js` (база — `start.sh --baseline <тека>`) |
+| М'яка зупинка зі збереженими звітами | `bash .claude/skills/local-run/scripts/stop.sh` |
+| Звіт після прогону: фільтри, помилки, скріншоти, трейси | `npx playwright show-report "$(bash .claude/skills/local-run/scripts/run-dir.sh)/report"` |
 
-Для іншого прогону замінити теку і назву логу. Сам прогін запускається з репортерами `list` (живий лог), `json` (порівняння) і `html` (звіт); шаблон команди в `run-before.sh` / `run-after.sh` будь-якого прогону.
+Що прогнати перед PR, якщо не повний прогін: `node scripts/affected-tests.js` (smoke + тести, до яких доходить зміна; частка від повного рахується в тестах, не в кейсах Qase, з 2026-10-21).
 
 Test Explorer у VS Code показує лише запуски, зроблені з нього самого; прогін з термінала там не видно. Щоб запускати окремі тести з Explorer проти локального стеку, у `settings.json` робочої теки: `"playwright.env": { "RUN_ENV": "docker_host", "QASE_SCOPE_URL": "https://senana.precorino.com/qase/scope" }`; виключення тегів у фільтрі Explorer: `!@not_for_isolated_env`. Для повного прогону Explorer не підходить: із закриттям VS Code прогін зупиняється.
 
