@@ -23,7 +23,7 @@ _width: wide
 - **Пріоритет: shell > `.env`-файл > defaults.** Спершу dotenv (`playwright.config.ts:42`), потім `applyRunEnvDefaults` ставить значення лише туди, де змінна ще `undefined` (`run_env.ts:86-92`, `playwright.config.ts:46-48`). dotenv теж не перезаписує вже задані змінні shell.
 - **Невідоме значення — помилка**, не тихий `dev`: `RUN_ENV=dokcer` кидає `Unknown RUN_ENV` (`run_env.ts:66-83`). Порожнє значення = `dev`.
 - **Нема env-файлу — помилка**, фолбеку на голий `.env` нема (`playwright.config.ts:29-38`); нечитабельний файл теж падає одразу (`playwright.config.ts:42-45`).
-- **`LOCAL_SERVER_URL` виведено з ужитку.** Якщо він заданий, а `RUN_ENV` не `branch`, прогін кидає помилку (`read_configs.ts:22-33`). Jenkins тепер передає `RUN_ENV=branch` + `APP_BASE_URL`.
+- **`LOCAL_SERVER_URL` виведено з ужитку.** Якщо він заданий, а `RUN_ENV` не `branch`, прогін кидає помилку (`read_configs.ts:22-33`). На `Develop` продукту (перевірено 2026-10-20) гілкові прогони йдуть у Docker з `RUN_ENV=docker` (`infra/jenkins.md`, docker-пайплайн); `RUN_ENV=branch` + `APP_BASE_URL` лишається для прогону проти гілкового сервера.
 - `APP_BASE_URL` без дефолту: якщо порожній, `buildConstants` падає (`read_configs.ts:36-41`, `:108-116`). Так само обов'язковий `MAIN_USER_PASSWORD` (`read_configs.ts:118-124`).
 - `_isDocker` у конфігу означає саме `RUN_ENV === 'docker'` (`playwright.config.ts:20`); `docker_host` навмисно не вважається docker (видимий браузер, локальна кількість воркерів, `playwright.config.ts:18-19`).
 
@@ -114,8 +114,8 @@ CLI `--grep` не замінює `grep` проекту, а накладаєть�
 
 | Прогін | Команда / змінні | Джерело |
 | --- | --- | --- |
-| Jenkins гілковий smoke | `RUN_ENV=branch` + `APP_BASE_URL`, `--grep "@smoke\|@<модуль>"` (модуль з Asana-задачі гілки); `--grep-invert` нема | `Jenkinsfile` продукту, не в репо TAF; `01-context/ci-and-envs.md`; `playwright.config.ts:170-172` |
-| Jenkins full run | `CI=true npx playwright test --grep-invert "<список нижче>"` | `docker-compose.yml:79-80`, `:107-109` |
+| Jenkins гілковий smoke | `docker compose run --rm -e CI=true -e REFRESH_AUTH=true e2e-smoke [--grep "@smoke\|@<модуль>\b"]` (модуль з Asana-задачі гілки); у контейнері `RUN_ENV=docker` | `ci/pipeline/helpers.groovy` продукту, `runPlaywrightDocker` (`origin/Develop`, 2026-10-20); `infra/jenkins.md` |
+| Jenkins full run | те саме з сервісом `e2e-full`: кейси з Qase scope `fullrun` | те саме; `docker-compose.yml`, сервіс `e2e-full` |
 | Precorino nightly | усі тести, `RUN_ENV=dev`, без `QASE_SCOPE_URL` | `run_env.ts:32`; `01-context/ci-and-envs.md` |
 | `npm run test:local-full` | `scripts/run-local.sh full`: `CI=1`, `RUN_ENV=docker_host`, `QASE_SCOPE_URL` (якщо не задано), `--grep-invert` списку full run | `package.json:10`, `scripts/run-local.sh:25-32` |
 | `npm run test:local-smoke` | те саме, але `--grep '@smoke'` без invert | `package.json:11`, `scripts/run-local.sh:33` |
@@ -154,6 +154,7 @@ CLI `--grep` не замінює `grep` проекту, а накладаєть�
 | `MAILPIT_QUICK_EMAILS_URL` | перевизначення швидкого списку листів | ні |
 | `DATABASE_URL` | рядок підключення MySQL | так для API (токени) і DB-хелперів |
 | `MAIN_USER_PASSWORD` | пароль усіх тестових акаунтів | так, без нього падає старт |
+| `TEST_TIMEOUT` | таймаут тесту, мс; не задано або порожньо → 120 s (`Timeouts.test`, `src/config/timeouts.ts`). `docker-compose.yml` задає 300 000 сервісам `e2e-smoke` і `e2e-full`, тобто гілковим прогонам Jenkins; нічний іде без compose → 120 s. Діє після мержу PR #291 (T2-08) | ні |
 | `ACCESS_SUBSTITUTE_USER_PASSWORD` | пароль окремого акаунта substitute | для відповідних тестів |
 | `HTTP_AUTH_USER`, `HTTP_AUTH_PASSWORD` | basic auth спільних `*.precorino.com` | на спільних середовищах |
 | `GMAIL_USERNAME`, `GMAIL_PASSWORD`, `GMAIL_APP_PASSWORD` | поштові тести через Gmail | для відповідних тестів |
