@@ -14,7 +14,8 @@ written to the store.
 
 Store (default ~/Work/Precoro/artifacts/jenkins-dev):
     index.json              every build ever seen: branch, number, result, start, duration, first_seen
-    tests/<branch>/<n>.json failed, broken and flaky tests of a finished build (from its Allure data)
+    tests/<branch>/<n>.json failed, broken and flaky tests of a finished build (from its Allure data),
+                            with the count of executed tests and their summed duration
 
 A red build is FAILURE or UNSTABLE. Time to green: from the end of a red build to the end of the
 next SUCCESS build on the same branch. NOT_BUILT and ABORTED are skipped in both roles.
@@ -94,17 +95,22 @@ def collect(store):
                 continue
             safe = re.sub(r'[^\w.-]+', '_', branch)
             out = os.path.join(store, 'tests', safe, f"{b['number']}.json")
-            if os.path.exists(out):
+            # files written before `executed` was stored are fetched again while the build is still in Jenkins
+            if os.path.exists(out) and 'executed' in json.load(open(out)):
                 continue
             suites = fetch(base, auth, f"/job/{JOB}/job/{urllib.parse.quote(job['name'], safe='%')}/{b['number']}/allure/data/suites.json")
-            tests = []
+            tests, executed, machine_ms = [], 0, 0
             for leaf in leaves(suites or {}):
+                if leaf.get('status') != 'skipped':
+                    executed += 1
+                    machine_ms += (leaf.get('time') or {}).get('duration') or 0
                 if leaf.get('status') in ('failed', 'broken') or leaf.get('flaky') or leaf.get('retriesCount'):
                     tests.append({'name': leaf.get('name'), 'status': leaf.get('status'),
                                   'flaky': bool(leaf.get('flaky')), 'retries': leaf.get('retriesCount', 0),
                                   'project': (leaf.get('parameters') or [None])[0]})
             os.makedirs(os.path.dirname(out), exist_ok=True)
-            json.dump({'allure': suites is not None, 'tests': tests}, open(out, 'w'))
+            json.dump({'allure': suites is not None, 'executed': executed, 'machine_ms': machine_ms, 'tests': tests},
+                      open(out, 'w'))
             new_tests += 1
     json.dump(index, open(index_path, 'w'), indent=0)
     print(f'{today}: branches now {len(data["jobs"])}, builds in store {len(index)} (+{new_builds}), '

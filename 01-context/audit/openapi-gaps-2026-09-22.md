@@ -1,7 +1,3 @@
-# Запит до розробки: схеми відповідей в OpenAPI
-
-Джерело: `01-context/archive/precoro-openapi-2026-09-22.json`, зіставлено зі шляхами, які будує `src/api/precoro_service.ts`. Потрібно для валідації відповідей у тестах (T1-25, T1-26).
-
 ## A. Є в специфікації, але без схеми відповіді: 34 операцій на 17 шляхах
 
 Усі мають лише `default` у `responses`, тобто ні коду, ні тіла. Для DELETE, якщо відповідь порожня, достатньо оголосити `204 No Content`; для решти потрібна схема тіла.
@@ -89,17 +85,3 @@
 - `/api/warehouses`
 - `/api/warehouses/{x}/items`
 - `/api/warehouses/{x}/items/{x}`
-
-## C. Не питати: динамічні шаблони клієнта (9)
-
-Це не окремі ендпоінти, а шляхи, які клієнт будує з типу документа: `/api/${docType}/${idn}/approve` тощо. У специфікації вони існують під конкретними типами.
-
-- `/api/attachments/{x}/{x}`
-- `/api/delegator_user_choices/{x}/{x}`
-- `/api/is_user_need_delegate_documents/{x}/{x}`
-- `/api/{x}/{x}`
-- `/api/{x}/{x}/approve`
-- `/api/{x}/{x}/approve_matching`
-- `/api/{x}/{x}/items`
-- `/api/{x}/{x}/reject`
-- `/api/{x}/{x}/revision`

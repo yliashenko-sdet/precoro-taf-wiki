@@ -88,6 +88,7 @@ git -C ~/Work/src/precoro fetch -q origin && git -C ~/Work/src/precoro rev-list 
 | `docker/e2e/phpfpm/.env.docker.e2e` | `ELASTICA_ENABLE_LISTENERS=true`: інакше нове, що створює тест, не потрапляє в Elasticsearch і списки та пошук його не бачать |
 | `docker-compose-e2e.yml`, `Makefile.e2e` | Elasticsearch 1 GB (з 400 MB падає на `es-sync` дампа 2026-09-22); `web/uploads/media` на `make up` (без неї падає кожен експорт) |
 | `docker/e2e/phpfpm/.env.docker.e2e` | `FRANKENPHP_NUM_THREADS=20` для 8 воркерів (типово 8 потоків) |
+| `docker-compose-e2e.yml` | `precoro-infisical: !reset null` у `depends_on` застосунку і `precoro-infisical:` з `profiles: ["infisical"]`: з 22.10 sidecar обов'язкова залежність, в e2e-стеку входу в Infisical нема, `make up` падає |
 
 Імовірно, у розгортанні інфра-AQA частину цього дає Infisical: контейнер застосунку стартує з секретами `development-docker`, якщо на хості є `infisical login`. Без нього контейнер у режимі `DEGRADED`. Не підтверджено.
 

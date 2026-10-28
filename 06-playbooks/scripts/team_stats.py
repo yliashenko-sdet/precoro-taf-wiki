@@ -34,6 +34,7 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -51,6 +52,9 @@ NIGHTLY_BRANCHES = re.compile(os.environ.get('NIGHTLY_BRANCHES', r'^(develop|fix
 
 def line_of(branch):
     return 'develop' if branch == 'develop' else 'fix' if (branch or '').startswith('fix/') else 'other'
+# A branch build runs either the smoke set or the full run. dev Jenkins has no stage API (wfapi), so the kind is
+# read from the executed count: smoke runs 200-300 tests, a full run 1100-1300 (20.10.2026), nothing in between.
+FULLRUN_MIN = 600
 MASS_PCT = 10.0         # a night where more tests finally failed is an environment failure
 WINDOW = 7              # nights before / after a change in the journal
 TRANSFORMATION_START = '2026-10-01'   # first TAF 2.0 PRs to develop; the journal starts here
@@ -72,15 +76,27 @@ CATALOG = {
     'nightly.wall_min': ('Wall-clock нічного, медіана', 'хв', 'down', 'QA Jenkins', None),
     'nightly.machine_h': ('Machine-time нічного (сума тестів), медіана', 'год', 'down', 'QA Jenkins Allure', None),
     'nightly.sec_per_test': ('Machine-time на тест, медіана', 'с', 'down', 'QA Jenkins Allure', None),
+    # Branch builds run on dev Jenkins: other machines, other worker count, another test selection than the
+    # nightly on QA Jenkins. Their numbers are kept apart and never compared with the nightly (Yevhen and
+    # Tetiana, 2026-10-20); the same quantities carry the same names, so each is read against its own history.
     'branch.builds': ('Гілкових білдів', 'білдів', None, 'dev Jenkins', None),
     'branch.red_pct': ('Червоних гілкових білдів', '%', 'down', 'dev Jenkins', None),
     'branch.to_green_h': ('Від червоного до зеленого на гілці, медіана', 'год', 'down', 'dev Jenkins', None),
-    'branch.multi_branch_tests': ('Тестів, що падали на 2+ гілках', 'тестів', 'down', 'dev Jenkins Allure', None),
-    'slack.bot_posts': ('Постів бота у #jenkins-failed-builds', 'постів', 'down', 'Slack', None),
-    'slack.test_posts': ('З них тестові падіння', 'постів', 'down', 'Slack', None),
-    'slack.thread_pct': ('Тестових падінь із розбором у треді', '%', 'up', 'Slack',
-                         'чекає T0-24 / T0-17: без інформативного повідомлення відповідати нема на що'),
-    'slack.product_causes': ('Тестових падінь, де причина продукт (баг знайдено)', 'тредів', None, 'Slack', None),
+    'branch.multi_branch_tests': ('Тестів, що падали на 2+ гілках (smoke і fullrun)', 'тестів', 'down', 'dev Jenkins Allure', None),
+    'branch.smoke_runs': ('Гілкових білдів зі smoke', 'білдів', None, 'dev Jenkins Allure', None),
+    'branch.fullruns': ('Гілкових fullrun', 'білдів', None, 'dev Jenkins Allure', None),
+    # per-run numbers below: full runs only, the same scope as the nightly
+    'branch.executed': ('Тестів виконано за fullrun, медіана', 'тестів', None, 'dev Jenkins Allure', None),
+    'branch.flaky_pct': ('Flaky rate за fullrun, медіана', '%', 'down', 'dev Jenkins Allure', None),
+    'branch.failed': ('Фінально впало за fullrun, медіана', 'тестів', 'down', 'dev Jenkins Allure', None),
+    'branch.flaky_tests': ('Різних тестів, flaky хоч раз за тиждень (fullrun)', 'тестів', 'down', 'dev Jenkins Allure', None),
+    'branch.wall_min': ('Тривалість fullrun (увесь пайплайн), медіана', 'хв', 'down', 'dev Jenkins', None),
+    'branch.sec_per_test': ('Machine-time на тест (fullrun), медіана', 'с', 'down', 'dev Jenkins Allure', None),
+    'slack.bot_posts': ('Постів бота у #jenkins-failed-builds', 'постів', 'down', 'Slack · dev Jenkins', None),
+    'slack.test_posts': ('З них тестові падіння', 'постів', 'down', 'Slack · dev Jenkins', None),
+    'slack.thread_pct': ('Тестових падінь із розбором у треді', '%', 'up', 'Slack · dev Jenkins',
+                         'чекає T0-17: без інформативного повідомлення відповідати нема на що'),
+    'slack.product_causes': ('Тестових падінь, де причина продукт (баг знайдено)', 'тредів', None, 'Slack · dev Jenkins', None),
     'github.opened': ('PR у TAF відкрито', 'PR', None, 'GitHub', None),
     'github.merged': ('PR у TAF змерджено в develop', 'PR', 'up', 'GitHub', None),
     'github.open_end': ('Відкритих PR на кінець тижня', 'PR', 'down', 'GitHub', None),
@@ -158,6 +174,39 @@ def leaves(node, path=()):
             yield path, c
 
 
+# ---------- failure classes
+
+# Symptom of the final failure, from the Allure statusMessage. Not a root cause: a locator timeout can be a
+# slow stand, a changed UI or a data problem. Order matters, the first match wins.
+FAILURE_CLASSES = (
+    ('test_timeout', re.compile(r'(Test|"\w+" hook) timeout of \d+ms exceeded', re.I)),
+    ('api_error', re.compile(r'Failed to .*\d{3}|failed: \d{3}|"code":\s*\d{3}|status (code )?[45]\d\d|ECONNREFUSED|ECONNRESET', re.I)),
+    ('locator_timeout', re.compile(r'Timeout \d+ms exceeded.*(waiting for locator|locator\.)|locator\.\w+: Timeout', re.I | re.S)),
+    ('wait_timeout', re.compile(r'Timeout \d+ms exceeded|waitForEvent|waitForResponse|waitForURL|waiting on the predicate', re.I)),
+    ('assertion', re.compile(r'expect\((locator|received|page)|toBe|toHave|toEqual|toContain|toMatch', re.I)),
+    ('script_error', re.compile(r'TypeError|ReferenceError|Cannot read propert|is not a function|undefined', re.I)),
+)
+
+
+def failure_class(msg):
+    msg = msg or ''
+    return next((name for name, rx in FAILURE_CLASSES if rx.search(msg)), 'other' if msg else 'no_message')
+
+
+def fetch_failures(base, auth, build, suites):
+    """Final failures of a nightly build: [key, class, message head]. One request per failed test."""
+    out = []
+    for path, t in leaves(suites):
+        if t['status'] not in ('failed', 'broken'):
+            continue
+        d = fetch(base, auth, f'/job/{NIGHTLY_JOB}/{build}/allure/data/test-cases/{t["uid"]}.json') or {}
+        msg = re.sub(r'\s+', ' ', ((d.get('testStage') or {}).get('statusMessage') or ''))[:300]
+        key = ' / '.join([path[0] if path else '?', (path[1] if len(path) > 1 else '?').replace('\\', '/'),
+                          t['name']] + list(t.get('parameters') or [])[1:])
+        out.append([key, failure_class(msg), msg])
+    return out
+
+
 # ---------- collect
 
 def collect_nightly():
@@ -169,7 +218,7 @@ def collect_nightly():
     index = load(os.path.join(d, 'index.json'), {})
     tree = urllib.parse.quote('builds[number,result,timestamp,duration,building,'
                               'actions[lastBuiltRevision[SHA1,branch[name]]]]')
-    new = 0
+    new = failures_new = 0
     for b in fetch(base, auth, f'/job/{NIGHTLY_JOB}/api/json?tree={tree}')['builds']:
         if b.get('building'):
             continue
@@ -180,10 +229,16 @@ def collect_nightly():
                     'branch': re.sub(r'^(refs/remotes/)?origin/', '', branch) if branch else None,
                     'sha': rev.get('SHA1')}
         out = os.path.join(d, f'{n}.json')
-        if b['duration'] < FULL_NIGHT_H * 3_600_000 or os.path.exists(out):
+        fout = os.path.join(d, f'{n}.failures.json')
+        if b['duration'] < FULL_NIGHT_H * 3_600_000 or (os.path.exists(out) and os.path.exists(fout)):
             continue
         suites = fetch(base, auth, f'/job/{NIGHTLY_JOB}/{n}/allure/data/suites.json')
         if suites is None:
+            continue
+        if not os.path.exists(fout):
+            save(fout, fetch_failures(base, auth, n, suites))
+            failures_new += 1
+        if os.path.exists(out):
             continue
         tests = []
         for path, t in leaves(suites):
@@ -197,7 +252,7 @@ def collect_nightly():
         save(out, tests)
         new += 1
     save(os.path.join(d, 'index.json'), index)
-    return f'nightly: builds in index {len(index)}, full builds fetched +{new}'
+    return f'nightly: builds in index {len(index)}, full builds fetched +{new}, failure messages +{failures_new}'
 
 
 def collect_jenkins_dev():
@@ -212,8 +267,14 @@ def collect_jenkins_dev():
 
 def collect_github():
     fields = 'number,title,author,createdAt,mergedAt,closedAt,state,baseRefName,isDraft,reviews,additions,deletions,mergeCommit'
-    r = subprocess.run(['gh', 'pr', 'list', '--state', 'all', '--limit', '1000', '--json', fields],
-                       cwd=TAF, capture_output=True, text=True)
+    # --limit 1000 is too heavy for the GraphQL endpoint (502/504 every time, 21-26.10.2026); 500 passes and
+    # covers all PRs for now (326 on 26.10). A gateway error is transient, so retry before giving up.
+    for attempt in range(3):
+        r = subprocess.run(['gh', 'pr', 'list', '--state', 'all', '--limit', '500', '--json', fields],
+                           cwd=TAF, capture_output=True, text=True)
+        if not r.returncode:
+            break
+        time.sleep(20 * (attempt + 1))
     if r.returncode:
         return 'github: failed, ' + r.stderr.strip()[-300:]
     prs = json.loads(r.stdout)
@@ -360,7 +421,13 @@ def nightly_metrics(start, end):
         'nightly.machine_h': median(n['machine_h'] for n in good),
         'nightly.sec_per_test': median(n['sec_per_test'] for n in good),
     }
+    classes = {}
+    for n in good:
+        for _, _, msg in load(os.path.join(STORE, 'raw', 'nightly', f"{n['number']}.failures.json"), []):
+            cls = failure_class(msg)   # from the stored message, so a new rule re-labels old nights too
+            classes[cls] = classes.get(cls, 0) + 1
     lists = {
+        'failure_classes': sorted(classes.items(), key=lambda kv: -kv[1]),
         'nights': [{k: v for k, v in n.items() if k != 'states'} for n in nights],
         'top_flaky': [[k, c, len(good)] for k, c in sorted(flaky_count.items(), key=lambda kv: -kv[1])[:15]],
         'new_failures': [[k, fail_count[k], len(good)] for k in new_fail[:15]],
@@ -385,17 +452,41 @@ def branch_metrics(start, end):
                         if x['number'] > b['number'] and x['result'] == 'SUCCESS'), None)
             if nxt:
                 to_green.append((nxt['start'] + nxt['duration'] - b['start'] - b['duration']) / 3_600_000)
-    failed = {}
+    failed, flaky_count, runs, smoke = {}, {}, [], 0
     for b in week:
         path = os.path.join(store, 'tests', re.sub(r'[^\w.-]+', '_', b['branch']), f"{b['number']}.json")
-        for t in (load(path) or {}).get('tests', []):
+        d = load(path) or {}
+        # The kind of run is known only where the executed count is: files written before it was stored keep
+        # failures only. Those builds count for cross-branch failures, not for the full-run numbers.
+        full = (d.get('executed') or 0) >= FULLRUN_MIN
+        smoke += 0 < (d.get('executed') or 0) < FULLRUN_MIN
+        n_fail = n_flaky = 0
+        for t in d.get('tests', []):
+            key = f"[{t['project']}] {t['name']}"
             if t['status'] in ('failed', 'broken'):
-                failed.setdefault(f"[{t['project']}] {t['name']}", set()).add(b['branch'])
+                failed.setdefault(key, set()).add(b['branch'])
+                n_fail += 1
+            elif t.get('flaky') or t.get('retries'):
+                if full:
+                    flaky_count[key] = flaky_count.get(key, 0) + 1
+                n_flaky += 1
+        if full:
+            runs.append({'executed': d['executed'], 'failed': n_fail, 'flaky_pct': n_flaky / d['executed'] * 100,
+                         'wall_min': b['duration'] / 60_000, 'sec_per_test': d['machine_ms'] / 1000 / d['executed']})
     multi = sorted(((k, len(v)) for k, v in failed.items() if len(v) >= 2), key=lambda kv: -kv[1])
     n_red = sum(1 for b in week if b['result'] in red)
+    rnd = lambda v, n=1: None if v is None else round(v, n)
     return ({'branch.builds': len(week), 'branch.red_pct': round(n_red / len(week) * 100, 1) if week else None,
-             'branch.to_green_h': median(to_green), 'branch.multi_branch_tests': len(multi)},
-            {'multi_branch_tests': multi[:15]})
+             'branch.to_green_h': median(to_green), 'branch.multi_branch_tests': len(multi),
+             'branch.smoke_runs': smoke, 'branch.fullruns': len(runs),
+             'branch.executed': median(r['executed'] for r in runs),
+             'branch.flaky_pct': rnd(median(r['flaky_pct'] for r in runs), 2),
+             'branch.failed': median(r['failed'] for r in runs),
+             'branch.flaky_tests': len(flaky_count) if runs else None,
+             'branch.wall_min': rnd(median(r['wall_min'] for r in runs), 0),
+             'branch.sec_per_test': rnd(median(r['sec_per_test'] for r in runs))},
+            {'multi_branch_tests': multi[:15],
+             'branch_top_flaky': [[k, c] for k, c in sorted(flaky_count.items(), key=lambda kv: -kv[1])[:15]]})
 
 
 def slack_metrics(week):
@@ -535,8 +626,10 @@ def report(week):
              f'Пораховано {cur["computed"]} скриптом `06-playbooks/scripts/team_stats.py`. Попередній тиждень {pw}. '
              '✓ / ✗ — зміна в кращий / гірший бік.', '']
     movers = []
+    lines += ['Нічні (QA Jenkins) і гілкові (dev Jenkins) — різні середовища: інші машини, кількість воркерів і набір '
+              'тестів. Їхні числа між собою не порівнюються, лише кожне зі своїм минулим тижнем.', '']
     groups = [('Нічний прогін (QA Jenkins)', 'nightly.'), ('Гілкові прогони (dev Jenkins)', 'branch.'),
-              ('Slack #jenkins-failed-builds', 'slack.'), ('PR у TAF (GitHub)', 'github.')]
+              ('Slack #jenkins-failed-builds (падіння гілкових білдів, dev Jenkins)', 'slack.'), ('PR у TAF (GitHub)', 'github.')]
     for title, prefix in groups:
         keys = [k for k in CATALOG if k.startswith(prefix)]
         if not any(k in cm or k in pm for k in keys):
@@ -570,9 +663,10 @@ def report(week):
                          f"{n['flaky']} ({n['flaky_pct']}%) | {n['failed']} | {n['wall_min']} | {n['machine_h']} | "
                          f"{'масова, виключено' if n['mass'] else ''} |")
         lines.append('')
-    for key, title in (('top_flaky', 'Найчастіше flaky за тиждень (ночей flaky / ночей)'),
-                       ('new_failures', 'Нові падіння (ночей впав / ночей; минулого тижня не падав)'),
-                       ('multi_branch_tests', 'Падали на кількох гілках (гілок)')):
+    for key, title in (('top_flaky', 'Нічні: найчастіше flaky за тиждень (ночей flaky / ночей)'),
+                       ('new_failures', 'Нічні: нові падіння (ночей впав / ночей; минулого тижня не падав)'),
+                       ('branch_top_flaky', 'Гілкові: найчастіше flaky за тиждень (білдів)'),
+                       ('multi_branch_tests', 'Гілкові: падали на кількох гілках (гілок)')):
         if L.get(key):
             lines += [f'### {title}', ''] + [f'- {r[0]} — ' + '/'.join(map(str, r[1:])) for r in L[key]] + ['']
     lines += ['## Що зрушило найбільше (кандидати на обговорення)', '']
@@ -610,7 +704,8 @@ PAGE_DIR = os.path.expanduser('~/Work/Precoro/artifacts/taf-stats')
 def export(weeks_back):
     """data.json for the TAF stats page: every computed week, the nights, the journal, the topics."""
     weeks = sorted(w for w in os.listdir(os.path.join(STORE, 'weeks'))
-                   if os.path.exists(os.path.join(STORE, 'weeks', w, 'metrics.json')))[-weeks_back:]
+                   if os.path.exists(os.path.join(STORE, 'weeks', w, 'metrics.json'))
+                   and week_bounds(w)[1] <= dt.datetime.now())[-weeks_back:]   # the running week is not a column
     data = {'generated': dt.datetime.now().isoformat(timespec='minutes'), 'weeks': [], 'metrics': {}, 'debt': {},
             'catalog': {k: {'label': v[0], 'unit': v[1], 'better': v[2], 'source': v[3], 'held': v[4],
                             'group': k.split('.')[0], 'target': TARGETS.get(k)} for k, v in CATALOG.items()},
@@ -620,7 +715,7 @@ def export(weeks_back):
         data['weeks'].append({'id': w, 'from': m['from'], 'to': m['to']})
         data['metrics'][w] = {k: v for k, v in m['metrics'].items() if not k.startswith(DEBT_PREFIX)}
         data['debt'][w] = {k[len(DEBT_PREFIX):]: v for k, v in m['metrics'].items() if k.startswith(DEBT_PREFIX)}
-        data['lists'][w] = {k: m['lists'].get(k) for k in ('top_flaky', 'new_failures', 'multi_branch_tests', 'merged',
+        data['lists'][w] = {k: m['lists'].get(k) for k in ('top_flaky', 'new_failures', 'multi_branch_tests', 'branch_top_flaky', 'merged',
                                                           'debt_commit', 'debt_definition')}
         t = load(os.path.join(STORE, 'weeks', w, 'topics.json'))
         if t:
@@ -634,6 +729,17 @@ def export(weeks_back):
         if e.get('transformation'):
             data['journal'].append({k: e.get(k) for k in ('pr', 'title', 'task', 'merged', 'hypothesis', 'retro', 'metrics')}
                                    | {'eval': {k: list(v) for k, v in evaluate(e).items()}})
+    # Last scheduled collection, from its log (stats/bin/daily-collect.sh): when, and which sources answered.
+    logs = sorted(f for f in os.listdir(os.path.join(STORE, 'logs')) if re.match(r'\d{4}-\d{2}-\d{2}\.log$', f)) \
+        if os.path.isdir(os.path.join(STORE, 'logs')) else []
+    if logs:
+        lines = open(os.path.join(STORE, 'logs', logs[-1]), encoding='utf-8').read().splitlines()
+        runs = [i for i, l in enumerate(lines) if re.match(r'^\w{3} \w{3} +\d+ [\d:]+ ', l)]
+        run = lines[runs[-1]:] if runs else lines
+        data['collect'] = {'date': logs[-1][:10], 'time': (re.search(r'\d{2}:\d{2}', run[0]) or [''])[0] if run else '',
+                           'sources': [l.split(':')[0] for l in run if re.match(r'^(nightly|jenkins-dev|github|debt):', l)],
+                           'failed': [l.split(':')[0] for l in run if re.match(r'^(nightly|jenkins-dev|github|debt):', l)
+                                      and re.search(r'failed|skipped|error|Traceback', l)]}
     out = os.path.join(PAGE_DIR, 'data.json')
     save(out, data)
     print(out)
