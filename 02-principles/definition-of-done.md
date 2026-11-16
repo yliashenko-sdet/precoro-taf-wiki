@@ -12,7 +12,7 @@ _organized: true
 - Тривалість менша за 60 с, або є `test.slow()` з коментарем.
 
 ## Для задачі з плану TAF 2.0
-- Definition of ready: картка в `05-roadmap/tasks/<ID>.md` написана і переглянута до старту.
+- Definition of ready: картка в `05-roadmap/phase_2/<ID>.md` (поза етапом 2 — `05-roadmap/tasks/<ID>.md`) написана і переглянута до старту.
 
 - Є ADR або посилання на існуючий.
 - Контрольний показник зафіксований до і після в `05-roadmap/metrics.md`.

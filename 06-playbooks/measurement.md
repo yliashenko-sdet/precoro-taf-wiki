@@ -9,7 +9,7 @@ _organized: true
 
 `scripts/debt.js` у репо TAF рахує патерни з `05-roadmap/metrics.md` у файлі або в репо; одиниця: входження. Цифри не зберігаються: значення на будь-якому коміті дає `npm run debt` на цьому коміті.
 
-Гейт `npm run debt:check` у GitHub Actions: у кожному зміненому в PR файлі патернів з переліку гейта не більше, ніж у `develop`. Правило і перелік: `05-roadmap/tasks/T0-13.md`.
+Гейт `npm run debt:check` у GitHub Actions: у кожному зміненому в PR файлі патернів з переліку гейта не більше, ніж у `develop`. Правило і перелік: `05-roadmap/phase_1/T0-13.md`.
 
 ## Труба 2. Machine-time (джерело: прогін)
 
