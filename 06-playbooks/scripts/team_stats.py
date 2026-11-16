@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Team statistics for Automation weekly: collect raw data, compute a week, write its report.
 
-    python3 team_stats.py collect [--only nightly,github,debt,jenkins-dev] [--weeks 3]
+    python3 team_stats.py collect [--only nightly,taf-branch,github,debt,jenkins-dev] [--weeks 3]   # default: all but jenkins-dev
     python3 team_stats.py week    [--week 2026-W42]     # metrics.json of that week (and of the one before, if missing)
     python3 team_stats.py report  [--week 2026-W42]     # report.md of that week: table, movers, change journal
     python3 team_stats.py journal-sync                   # new merged TAF PRs into journal.json, hypothesis empty
@@ -13,7 +13,8 @@ Store: ~/Work/Precoro/stats (STATS_DIR). Layout:
 
     raw/nightly/index.json        every nightly build seen: number, result, start, duration
     raw/nightly/<n>.json          tests of a full nightly build, reduced from its Allure suites.json
-    raw/jenkins-dev/              store of jenkins_dev_builds.py (branch builds)
+    raw/taf-branch/<run>-<attempt>-<suite>.json   full-run.yml runs of TAF branches, copied from the taf-stats branch
+    raw/jenkins-dev/              store of jenkins_dev_builds.py (branch builds until 2026-W43; not collected by default)
     raw/github/prs.json           TAF pull requests, last snapshot (gh)
     raw/debt/<sha>.json           npm run debt on that commit of origin/develop
     raw/slack/<week>.json         #jenkins-failed-builds posts of the week, written by the skill
@@ -59,6 +60,7 @@ MASS_PCT = 10.0         # a night where more tests finally failed is an environm
 WINDOW = 7              # nights before / after a change in the journal
 TRANSFORMATION_START = '2026-10-01'   # first TAF 2.0 PRs to develop; the journal starts here
 BOTS = ('coderabbitai', 'copilot-pull-request-reviewer')
+TAF_STATS_REF = 'origin/taf-stats'   # records of stats-collect in the TAF repo (ADR-012)
 
 # key: (label, unit, better, source, held). better: 'down' | 'up' | None.
 # held: why the number is collected but not brought to the meeting yet.
@@ -76,22 +78,23 @@ CATALOG = {
     'nightly.wall_min': ('Wall-clock нічного, медіана', 'хв', 'down', 'QA Jenkins', None),
     'nightly.machine_h': ('Machine-time нічного (сума тестів), медіана', 'год', 'down', 'QA Jenkins Allure', None),
     'nightly.sec_per_test': ('Machine-time на тест, медіана', 'с', 'down', 'QA Jenkins Allure', None),
-    # Branch builds run on dev Jenkins: other machines, other worker count, another test selection than the
-    # nightly on QA Jenkins. Their numbers are kept apart and never compared with the nightly (Yevhen and
-    # Tetiana, 2026-10-20); the same quantities carry the same names, so each is read against its own history.
-    'branch.builds': ('Гілкових білдів', 'білдів', None, 'dev Jenkins', None),
-    'branch.red_pct': ('Червоних гілкових білдів', '%', 'down', 'dev Jenkins', None),
-    'branch.to_green_h': ('Від червоного до зеленого на гілці, медіана', 'год', 'down', 'dev Jenkins', None),
-    'branch.multi_branch_tests': ('Тестів, що падали на 2+ гілках (smoke і fullrun)', 'тестів', 'down', 'dev Jenkins Allure', None),
-    'branch.smoke_runs': ('Гілкових білдів зі smoke', 'білдів', None, 'dev Jenkins Allure', None),
-    'branch.fullruns': ('Гілкових fullrun', 'білдів', None, 'dev Jenkins Allure', None),
+    # Branch runs of the TAF: full-run.yml in GitHub Actions on PR branches, collected by stats-collect into the
+    # taf-stats branch. Other machines, worker count and test selection than the nightly on QA Jenkins: kept apart
+    # and never compared with it (Yevhen and Tetiana, 2026-10-20); each is read against its own history.
+    # Until 2026-W43 these keys came from dev Jenkins; from 2026-W44 on, from GitHub Actions (Yevhen, 2026-11-09).
+    'branch.builds': ('Гілкових запусків (full-run.yml)', 'запусків', None, 'GitHub Actions TAF', None),
+    'branch.red_pct': ('Червоних гілкових запусків', '%', 'down', 'GitHub Actions TAF', None),
+    'branch.to_green_h': ('Від червоного до зеленого на гілці, медіана', 'год', 'down', 'GitHub Actions TAF', None),
+    'branch.multi_branch_tests': ('Тестів, що падали на 2+ гілках (smoke і full)', 'тестів', 'down', 'GitHub Actions TAF', None),
+    'branch.smoke_runs': ('Гілкових smoke', 'прогонів', None, 'GitHub Actions TAF', None),
+    'branch.fullruns': ('Гілкових full', 'прогонів', None, 'GitHub Actions TAF', None),
     # per-run numbers below: full runs only, the same scope as the nightly
-    'branch.executed': ('Тестів виконано за fullrun, медіана', 'тестів', None, 'dev Jenkins Allure', None),
-    'branch.flaky_pct': ('Flaky rate за fullrun, медіана', '%', 'down', 'dev Jenkins Allure', None),
-    'branch.failed': ('Фінально впало за fullrun, медіана', 'тестів', 'down', 'dev Jenkins Allure', None),
-    'branch.flaky_tests': ('Різних тестів, flaky хоч раз за тиждень (fullrun)', 'тестів', 'down', 'dev Jenkins Allure', None),
-    'branch.wall_min': ('Тривалість fullrun (увесь пайплайн), медіана', 'хв', 'down', 'dev Jenkins', None),
-    'branch.sec_per_test': ('Machine-time на тест (fullrun), медіана', 'с', 'down', 'dev Jenkins Allure', None),
+    'branch.executed': ('Тестів виконано за full, медіана', 'тестів', None, 'GitHub Actions TAF', None),
+    'branch.flaky_pct': ('Flaky rate за full, медіана', '%', 'down', 'GitHub Actions TAF', None),
+    'branch.failed': ('Фінально впало за full, медіана', 'тестів', 'down', 'GitHub Actions TAF', None),
+    'branch.flaky_tests': ('Різних тестів, flaky хоч раз за тиждень (full)', 'тестів', 'down', 'GitHub Actions TAF', None),
+    'branch.wall_min': ('Тривалість джоби E2E full, медіана', 'хв', 'down', 'GitHub Actions TAF', None),
+    'branch.sec_per_test': ('Machine-time на тест (full), медіана', 'с', 'down', 'GitHub Actions TAF', None),
     'slack.bot_posts': ('Постів бота у #jenkins-failed-builds', 'постів', 'down', 'Slack · dev Jenkins', None),
     'slack.test_posts': ('З них тестові падіння', 'постів', 'down', 'Slack · dev Jenkins', None),
     'slack.thread_pct': ('Тестових падінь із розбором у треді', '%', 'up', 'Slack · dev Jenkins',
@@ -435,46 +438,79 @@ def nightly_metrics(start, end):
     return m, lists
 
 
+def collect_taf_branch():
+    """The full-run.yml runs of TAF branches: the records stats-collect (TAF repo, ADR-012) writes to the taf-stats
+    branch. Copied into raw/taf-branch/, one file per record; a record never changes, so only new ones are read."""
+    git = lambda *a: subprocess.run(['git', *a], cwd=TAF, capture_output=True, text=True)
+    f = git('fetch', '-q', 'origin', f'+refs/heads/taf-stats:refs/remotes/{TAF_STATS_REF}')
+    if f.returncode:
+        return 'taf-branch: failed, ' + f.stderr.strip()[-300:]
+    paths = [p for p in git('ls-tree', '-r', '--name-only', TAF_STATS_REF, 'data/full-run-taf').stdout.split()
+             if p.endswith('.json')]
+    store, new = os.path.join(STORE, 'raw', 'taf-branch'), 0
+    for p in paths:
+        out = os.path.join(store, os.path.basename(p))
+        if os.path.exists(out):
+            continue
+        blob = git('show', f'{TAF_STATS_REF}:{p}')
+        if blob.returncode:
+            return f'taf-branch: failed on {p}, ' + blob.stderr.strip()[-300:]
+        save(out, json.loads(blob.stdout))
+        new += 1
+    return f'taf-branch: records in taf-stats {len(paths)}, new +{new}'
+
+
 def branch_metrics(start, end):
-    store = os.path.join(STORE, 'raw', 'jenkins-dev')
-    index = load(os.path.join(store, 'index.json'))
-    if not index:
+    """Branch runs of the TAF itself: full-run.yml in GitHub Actions (smoke and full jobs of a PR branch), from
+    raw/taf-branch. A build is one run attempt; it is red when any of its suites finally failed. Until W43 the
+    branch.* keys came from dev Jenkins (another pipeline): weeks before 2026-W44 are not comparable with later ones."""
+    store = os.path.join(STORE, 'raw', 'taf-branch')
+    if not os.path.isdir(store):
         return {}, {}
-    red = {'FAILURE', 'UNSTABLE'}
-    week = [b for b in index.values() if ms(start) <= b['start'] < ms(end) and b['result'] in red | {'SUCCESS'}]
+    builds = {}
+    for f in os.listdir(store):
+        d = load(os.path.join(store, f)) or {}
+        r = d.get('run') or {}
+        # develop is not a branch run; aborted and empty runs say nothing about the tests
+        if r.get('branch_kind') == 'develop' or r.get('conclusion') not in ('passed', 'failed'):
+            continue
+        s = dt.datetime.fromisoformat(r['started_at'].replace('Z', '+00:00')).timestamp() * 1000
+        b = builds.setdefault((r['id'], r['attempt']), {'branch': r['branch'], 'start': s, 'end': 0, 'red': False,
+                                                         'suites': []})
+        b['start'] = min(b['start'], s)
+        b['end'] = max(b['end'], s + (r.get('duration_s') or 0) * 1000)
+        b['red'] |= r['conclusion'] == 'failed'
+        b['suites'].append((r, d))
+    week = [b for b in builds.values() if ms(start) <= b['start'] < ms(end)]
     by_branch = {}
-    for b in index.values():
+    for b in builds.values():
         by_branch.setdefault(b['branch'], []).append(b)
     to_green = []
     for b in week:
-        if b['result'] in red:
-            nxt = next((x for x in sorted(by_branch[b['branch']], key=lambda x: x['number'])
-                        if x['number'] > b['number'] and x['result'] == 'SUCCESS'), None)
+        if b['red']:
+            nxt = next((x for x in sorted(by_branch[b['branch']], key=lambda x: x['start'])
+                        if x['start'] > b['start'] and not x['red']), None)
             if nxt:
-                to_green.append((nxt['start'] + nxt['duration'] - b['start'] - b['duration']) / 3_600_000)
+                to_green.append((nxt['end'] - b['end']) / 3_600_000)
     failed, flaky_count, runs, smoke = {}, {}, [], 0
     for b in week:
-        path = os.path.join(store, 'tests', re.sub(r'[^\w.-]+', '_', b['branch']), f"{b['number']}.json")
-        d = load(path) or {}
-        # The kind of run is known only where the executed count is: files written before it was stored keep
-        # failures only. Those builds count for cross-branch failures, not for the full-run numbers.
-        full = (d.get('executed') or 0) >= FULLRUN_MIN
-        smoke += 0 < (d.get('executed') or 0) < FULLRUN_MIN
-        n_fail = n_flaky = 0
-        for t in d.get('tests', []):
-            key = f"[{t['project']}] {t['name']}"
-            if t['status'] in ('failed', 'broken'):
-                failed.setdefault(key, set()).add(b['branch'])
-                n_fail += 1
-            elif t.get('flaky') or t.get('retries'):
-                if full:
+        for r, d in b['suites']:
+            full = r['suite'] == 'full'
+            smoke += r['suite'] == 'smoke'
+            for t in d.get('tests', []):
+                key = f"[{t['project']}] {t['title']}"
+                if t['status'] == 'failed':
+                    failed.setdefault(key, set()).add(b['branch'])
+                elif t['status'] == 'flaky' and full:
                     flaky_count[key] = flaky_count.get(key, 0) + 1
-                n_flaky += 1
-        if full:
-            runs.append({'executed': d['executed'], 'failed': n_fail, 'flaky_pct': n_flaky / d['executed'] * 100,
-                         'wall_min': b['duration'] / 60_000, 'sec_per_test': d['machine_ms'] / 1000 / d['executed']})
+            tot = d.get('totals') or {}
+            if full and tot.get('executed'):
+                runs.append({'executed': tot['executed'], 'failed': tot.get('failed', 0),
+                             'flaky_pct': tot.get('flaky', 0) / tot['executed'] * 100,
+                             'wall_min': (r.get('duration_s') or 0) / 60,
+                             'sec_per_test': tot.get('machine_ms', 0) / 1000 / tot['executed']})
     multi = sorted(((k, len(v)) for k, v in failed.items() if len(v) >= 2), key=lambda kv: -kv[1])
-    n_red = sum(1 for b in week if b['result'] in red)
+    n_red = sum(1 for b in week if b['red'])
     rnd = lambda v, n=1: None if v is None else round(v, n)
     return ({'branch.builds': len(week), 'branch.red_pct': round(n_red / len(week) * 100, 1) if week else None,
              'branch.to_green_h': median(to_green), 'branch.multi_branch_tests': len(multi),
@@ -626,9 +662,10 @@ def report(week):
              f'Пораховано {cur["computed"]} скриптом `06-playbooks/scripts/team_stats.py`. Попередній тиждень {pw}. '
              '✓ / ✗ — зміна в кращий / гірший бік.', '']
     movers = []
-    lines += ['Нічні (QA Jenkins) і гілкові (dev Jenkins) — різні середовища: інші машини, кількість воркерів і набір '
-              'тестів. Їхні числа між собою не порівнюються, лише кожне зі своїм минулим тижнем.', '']
-    groups = [('Нічний прогін (QA Jenkins)', 'nightly.'), ('Гілкові прогони (dev Jenkins)', 'branch.'),
+    lines += ['Нічні (QA Jenkins) і гілкові (GitHub Actions, full-run.yml на PR-гілках TAF) — різні середовища: інші '
+              'машини, кількість воркерів і набір тестів. Їхні числа між собою не порівнюються, лише кожне зі своїм '
+              'минулим тижнем. Гілкові до 2026-W43 бралися з dev Jenkins і з пізнішими не порівнюються.', '']
+    groups = [('Нічний прогін (QA Jenkins)', 'nightly.'), ('Гілкові прогони TAF (GitHub Actions)', 'branch.'),
               ('Slack #jenkins-failed-builds (падіння гілкових білдів, dev Jenkins)', 'slack.'), ('PR у TAF (GitHub)', 'github.')]
     for title, prefix in groups:
         keys = [k for k in CATALOG if k.startswith(prefix)]
@@ -737,8 +774,8 @@ def export(weeks_back):
         runs = [i for i, l in enumerate(lines) if re.match(r'^\w{3} \w{3} +\d+ [\d:]+ ', l)]
         run = lines[runs[-1]:] if runs else lines
         data['collect'] = {'date': logs[-1][:10], 'time': (re.search(r'\d{2}:\d{2}', run[0]) or [''])[0] if run else '',
-                           'sources': [l.split(':')[0] for l in run if re.match(r'^(nightly|jenkins-dev|github|debt):', l)],
-                           'failed': [l.split(':')[0] for l in run if re.match(r'^(nightly|jenkins-dev|github|debt):', l)
+                           'sources': [l.split(':')[0] for l in run if re.match(r'^(nightly|taf-branch|jenkins-dev|github|debt):', l)],
+                           'failed': [l.split(':')[0] for l in run if re.match(r'^(nightly|taf-branch|jenkins-dev|github|debt):', l)
                                       and re.search(r'failed|skipped|error|Traceback', l)]}
     out = os.path.join(PAGE_DIR, 'data.json')
     save(out, data)
@@ -756,14 +793,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('cmd', choices=['collect', 'week', 'report', 'journal-sync', 'catalog', 'export'])
     ap.add_argument('--week')
-    ap.add_argument('--only', default='nightly,github,debt,jenkins-dev')
+    ap.add_argument('--only', default='nightly,github,debt,taf-branch')
     ap.add_argument('--weeks', type=int, default=3, help='collect debt for this many last weeks')
     ap.add_argument('--weeks-back', type=int, default=12, help='export: this many last computed weeks')
     a = ap.parse_args()
     week = a.week or last_week()
     if a.cmd == 'collect':
         only = a.only.split(',')
-        for name, fn in (('nightly', collect_nightly), ('jenkins-dev', collect_jenkins_dev),
+        for name, fn in (('nightly', collect_nightly), ('taf-branch', collect_taf_branch), ('jenkins-dev', collect_jenkins_dev),
                          ('github', collect_github), ('debt', lambda: collect_debt(a.weeks))):
             if name in only:
                 print(fn(), flush=True)

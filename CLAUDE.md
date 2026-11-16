@@ -34,7 +34,7 @@
 | Codemod, показник техборгу, гейт | `06-playbooks/playbook-codemod-metrics.md`, "Як робити codemod: покроково"; правило гейта в `05-roadmap/tasks/T0-13.md` |
 | Локальний прогін, "до" і "після" | `06-playbooks/local-run.md` |
 | Помітив дефект або спрощення поза задачею | `01-context/findings.md`, правила зверху |
-| Рев'ю PR General QA | скіл `gqa-pr-review` |
+| Рев'ю PR у TAF (будь-якого автора) | скіл `taf-pr-review` (`.claude/skills/` репо TAF; як працює — `docs/taf-pr-review-skill.md`) |
 | Опис PR, коміт, назва гілки | `working-agreement.md`, "Гілки, коміти, PR" і "Мови" |
 
 Хребет: `01-context/pains.md` → `05-roadmap/pain-to-plan.md` (для керівництва) → `05-roadmap/plan-to-tasks.md` з картками в `05-roadmap/tasks/`. Решта довідка.

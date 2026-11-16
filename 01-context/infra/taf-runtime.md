@@ -104,9 +104,11 @@ Docker-контейнер підміняє репортери на `allure-playw
 | --- | --- | --- |
 | UI | Chromium із `storageState` проекту (сесія з globalSetup), `ignoreHTTPSErrors` | `playwright.config.ts:130-145`, `global-setup.ts:83` |
 | API | `BaseClient`: заголовки `X-AUTH-TOKEN`, `email`, `X-AUTO-TESTS`; базовий хост `apiBaseUrl` | `src/api/base_service.ts:17-23` |
-| API-токен | `BaseClient.create()` бере токен із БД за email: `fos_user_user` → `api_token` (`enable=1`), з очікуванням до 10 с; кеш промісів на email, невдалий запит викидається з кешу | `base_service.ts:42-45`, `:52-65`; `src/data_base/dev_precoro_db.ts:40-49` |
+| API-токен | `BaseClient.create()` бере токен із БД за email: `fos_user_user` → `api_token` (`enable=1`), з очікуванням до 10 с; кеш промісів на email, невдалий запит викидається з кешу. Кеш працює лише без явного токена: `apiClient` і 30 фікстур передають токен явно і його обминають (2026-11-03, `taf-levels-map.md`) | `base_service.ts:42-45`, `:52-65`; `src/data_base/dev_precoro_db.ts:40-49` |
 | MySQL напряму | `DataBase` будує пул із `DATABASE_URL` (через `Constants.connection_string`), один пул на рядок підключення на воркер, `connectionLimit: 3` | `src/data_base/db_connection.ts:20-41` |
 | Пошта | Mailpit за `MAILPIT_URL` (`requireMailPitUrl`), швидкий список листів `MAILPIT_QUICK_EMAILS_URL` | `read_configs.ts:55-63`, `:421` |
+
+Що з цього створюється раз на прогін, раз на воркер і на кожен тест: `taf-levels-map.md`.
 
 ## 6. Рецепти вибору тестів
 

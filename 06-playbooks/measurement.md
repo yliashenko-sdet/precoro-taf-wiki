@@ -71,7 +71,7 @@ testInfo.annotations.push({ type: 'load', description: JSON.stringify(counters) 
 
 ## Тижневий звіт
 
-`scripts/weekly-report.ts` щопонеділка (cron у Jenkins) → `metrics/weekly/YYYY-Www.md`:
+`scripts/weekly-report.ts` щопонеділка (Actions, `cron` з `develop`; оновлено 2026-10-29, було «cron у Jenkins», див. T0-14) → `metrics/weekly/YYYY-Www.md` і підсумок у Slack:
 
 1. Таблиця показників: `npm run debt` на коміті тиждень тому і зараз, дельта.
 2. Machine-time: медіана минулого тижня vs цього, загалом і на тест; по проектах top-5 прискорень і сповільнень.
