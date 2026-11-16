@@ -74,6 +74,7 @@ Baseline: аудит `release` 2026-09-01 і нічний прогін 2026-09-3
 | Spec-файлів > 1 500 рядків | 27 | 0 | codemod + local run |
 | `if` / `else` у spec-файлах | 1 436 | ≤ 100 | codemod + local run |
 | Не-spec файлів > 1 000 рядків | 10 | 0 | codemod + local run |
+| Файлів > 1 000 рядків, spec / решта (ціль етапу 2, 16.11; `git grep -c`, `0926e754`) | 21 / 17 | 0; розрізані ≤ 800 | codemod + local run |
 | INI-файлів | 7 | 0 | codemod |
 | `tsc` помилок / `eslint` помилок | 3 / 109 | 0 / 0 | codemod + local run |
 | Тестів `@not_for_isolated_env` (не біжать на гілках) | 1 053 (47% тестів, 11.1h, 30.09) | 0 | instrument + nightly run |
