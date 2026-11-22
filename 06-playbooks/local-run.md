@@ -2,26 +2,21 @@
 
 Як ганяти сьют TAF з Mac проти локального стеку продукту. Запуск через Docker або Jenkins задає середовище неявно, у командах і compose-файлах; тут зібрано те, що для запуску з хоста треба знати явно. Перевірено 2026-09-30 / 10-01.
 
-## Команди
+## Стек з 2026-11-22: як на GHA (T0-36)
+
+Стек той самий, на якому e2e біжать на GitHub Actions: образ з `docker/ci/Dockerfile` продукту, `docker-compose-ci.yml`, `import-seed.sh` і `init-app.sh`. Піднімає його `scripts/local-stack.sh` TAF; у робочому дереві продукту нічого не правиться. Повний опис: `docs/local-run.md` TAF, розділ 2.
 
 ```bash
 cd ~/Work/src/precoro-e2e-playwright
-rm -rf .auth                      # після кожного prepare-db
-npm run test:local-full           # повний прогін як у Jenkins (1 109 запусків на `develop` 2026-10-01; 1 059 на базі від 28.09)
-npm run test:local-smoke          # смоук як на гілці (--grep @smoke, 312 запусків)
-npm run test:local-full -- --workers=8 --project=po_company   # додаткові аргументи Playwright
+bash scripts/local-stack.sh build   # образ precoro-ci-app:local з checkout продукту, ≈ 15 хв; після кожного git pull продукту
+bash scripts/local-stack.sh up      # http://localhost:8080, opensearch-sync:latest-staging
+bash scripts/local-stack.sh seed    # база з найсвіжішого дампа, міграції, OpenSearch, прибирає .auth
+npm run test:local-smoke            # або test:local-full, або скіл local-run (start.sh)
 ```
 
-Скрипт `scripts/run-local.sh` і два записи в `package.json` закомічені 2026-10-02 у PR #203 (`28db4af6`, гілка `feature/liashenko/quality-gate`); після мержу вони будуть у `develop`. Для гілок, де цього коміту ще нема, копія патчем: `~/Work/Precoro/local-runs/run-local-scripts.patch`, `git apply <patch>`.
+Один раз на машині: `.env.ci.infisical` у корені продукту (`infisical export --env=e2e-tests` або файл від GQA), `docker login registry.digitalocean.com`, `127.0.0.1 rustfs` в `/etc/hosts`. `RUN_ENV=docker_host` тепер означає `http://localhost:8080`, сертифіката нема.
 
-| Що | Навіщо |
-| --- | --- |
-| `RUN_ENV=docker_host` | `.env.local-stack` і `https://localhost`. `RUN_ENV=docker` з хоста не працює: імена контейнерів (`precoro-app`, `precoro-mysql`) не резолвляться |
-| `CI=1` | headless, 3 ретраї, як у Jenkins |
-| `QASE_SCOPE_URL` | Qase додає `@smoke` / `@unstable` за QaseID під час збору тестів; без цього 281 тест, позначений у Qase як `@unstable`, біжить як звичайний |
-| `--grep-invert` повного прогону | той самий список, що `e2e-full` у `docker-compose.yml` TAF і повний прогін у `Jenkinsfile` продукту, разом з `@not_for_isolated_env` |
-| `NODE_EXTRA_CA_CERTS` | довіра до самопідписаного сертифіката стеку для тестів з власним `browser.newContext()` |
-| `git clean -fqX -- src/downloads` | прибирає завантаження попереднього прогону (F-11); тека схована від git локально через `.git/info/exclude` |
+Розділи нижче про старий стек (`Makefile.e2e`, `taf/base-<дата>`, шість правок продукту) — історія до T0-36.
 
 `GREP_INVERT` як змінну середовища читає лише `docker-entrypoint.sh` у контейнері; Playwright напряму її не бачить.
 
